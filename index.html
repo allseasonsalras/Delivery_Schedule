@@ -103,12 +103,7 @@
   <!-- Controls Section -->
   <main class="max-w-4xl mx-auto w-full p-2 sm:p-3 flex-1 flex flex-col gap-2.5">
     <div class="bg-white rounded-lg p-2.5 shadow-sm flex flex-col md:flex-row gap-2.5 justify-between items-center">
-      <div class="relative w-full md:w-1/2">
-        <i class="fas fa-search absolute left-3 top-2.5 text-slate-400"></i>
-        <input type="text" id="searchInput" oninput="filterData()" placeholder="Search item, party name, or delivery no..." class="w-full pl-9 pr-3 py-1.5 text-sm border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-      </div>
-      
-      <!-- Filter Tabs -->
+      <!-- Filter Tabs (Search bar removed) -->
       <div class="flex gap-1 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 custom-scrollbar text-xs font-semibold">
         <button onclick="setFilter('all')" id="btn-all" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white shadow-sm whitespace-nowrap">All Items</button>
         <button onclick="setFilter('pending')" id="btn-pending" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap">Pending</button>
@@ -335,7 +330,6 @@
     };
 
     async function init() {
-      // Try loading from Cloud first, fallback to localStorage if offline
       await loadFromCloud(false);
 
       if (Object.keys(allHistoryData).length === 0) {
@@ -539,7 +533,6 @@
       const container = document.getElementById('itemsContainer');
       const stopsContainer = document.getElementById('stopsContainer');
       const routeEditorContainer = document.getElementById('routeEditorContainer');
-      const searchQuery = document.getElementById('searchInput').value.toLowerCase();
 
       container.classList.add('hidden');
       stopsContainer.classList.add('hidden');
@@ -547,7 +540,7 @@
 
       if (currentFilter === 'stops') {
         stopsContainer.classList.remove('hidden');
-        renderStopsTable(searchQuery);
+        renderStopsTable();
         return;
       }
 
@@ -564,11 +557,7 @@
       let filtered = vehicleData.items.filter(item => {
         const matchesStatus = currentFilter === 'all' ? true : currentFilter === 'loaded' ? item.checked : !item.checked;
         const matchesArea = currentAreaFilter === 'ALL' ? true : item.area === currentAreaFilter;
-        const matchesSearch = item.item.toLowerCase().includes(searchQuery) ||
-                              item.customer.toLowerCase().includes(searchQuery) ||
-                              item.vch.toString().includes(searchQuery) ||
-                              item.area.toLowerCase().includes(searchQuery);
-        return matchesStatus && matchesArea && matchesSearch;
+        return matchesStatus && matchesArea;
       });
 
       let dayData = allHistoryData[activeDate];
@@ -614,7 +603,8 @@
               <h2 class="text-base sm:text-lg font-extrabold text-slate-900 leading-snug">${custName}</h2>
             </div>
             <div class="flex items-center gap-1.5">
-              <span class="text-[11px] font-semibold px-2 py-0.5 bg-slate-200 text-slate-700 rounded-md">
+              <!-- Increased Area Name Size -->
+              <span class="text-xs sm:text-sm font-bold px-3 py-1 bg-blue-100 text-blue-800 rounded-md shadow-sm border border-blue-200">
                 <i class="fas fa-location-dot mr-1"></i>${areaName}
               </span>
               <span class="text-[11px] font-bold px-2 py-0.5 rounded-full ${allChecked ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-800'}">
@@ -648,7 +638,7 @@
       });
     }
 
-    function renderStopsTable(query) {
+    function renderStopsTable() {
       const tbody = document.getElementById('stopsTableBody');
       tbody.innerHTML = '';
       
@@ -666,14 +656,13 @@
       let sortedStops = Object.values(stops).sort((a, b) => a.stopNo - b.stopNo);
 
       sortedStops.forEach(s => {
-        if (query && !s.customer.toLowerCase().includes(query) && !s.vch.toString().includes(query) && !s.area.toLowerCase().includes(query)) return;
         const isComplete = s.checked === s.total;
         const tr = document.createElement('tr');
         tr.className = 'border-b hover:bg-slate-50';
         tr.innerHTML = `
           <td class="p-1.5 font-mono font-bold text-blue-600">${s.stopNo !== 999 ? 'Stop #' + s.stopNo : '-'}</td>
           <td class="p-1.5 font-extrabold text-slate-900 text-sm">${s.customer}</td>
-          <td class="p-1.5">${s.area}</td>
+          <td class="p-1.5 font-bold text-blue-800">${s.area}</td>
           <td class="p-1.5 font-semibold">${s.checked} / ${s.total} items</td>
           <td class="p-1.5">
             <span class="px-2 py-0.5 rounded text-[11px] font-bold ${isComplete ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
@@ -784,7 +773,7 @@
               <option value="Vehicle 2" ${stopObj.assignedVehicle === 'Vehicle 2' ? 'selected' : ''}>${v2Label}</option>
             </select>
           </td>
-          <td class="p-1.5 font-semibold text-slate-600">${stopObj.area}</td>
+          <td class="p-1.5 font-bold text-blue-800">${stopObj.area}</td>
           <td class="p-1.5 font-bold text-slate-800 text-sm">${stopObj.customer}</td>
         `;
         tbody.appendChild(tr);
@@ -1063,10 +1052,6 @@
     function setAreaFilter(area) {
       currentAreaFilter = area;
       renderAreaPills();
-      renderList();
-    }
-
-    function filterData() {
       renderList();
     }
 
