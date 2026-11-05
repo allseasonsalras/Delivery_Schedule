@@ -19,7 +19,6 @@
       background-color: #cbd5e1;
       border-radius: 3px;
     }
-    /* 3D Button Utility Styles */
     .btn-3d {
       transition: all 0.1s ease;
       box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
@@ -34,22 +33,18 @@
 </head>
 <body class="bg-slate-100 min-h-screen text-slate-800 flex flex-col font-sans">
 
-  <!-- Header -->
   <header class="bg-blue-700 text-white shadow-md sticky top-0 z-30 select-none">
-    <!-- Clickable Top Bar to Collapse/Expand -->
     <div onclick="toggleHeader()" class="cursor-pointer bg-blue-800 px-4 py-1 text-center text-[11px] font-medium text-blue-200 hover:bg-blue-900 transition flex items-center justify-center gap-1">
       <i id="headerToggleIcon" class="fas fa-chevron-up"></i> Tap here to show/hide control header
     </div>
 
     <div id="collapsibleHeaderContent" class="transition-all duration-300 overflow-hidden">
-      <!-- Line 1: Date & Custom Vehicle Registration Input -->
       <div class="max-w-4xl mx-auto px-4 py-1.5 flex flex-col sm:flex-row justify-between items-center gap-2 border-b border-blue-600/50">
         <div class="flex items-center gap-2">
           <p id="currentDateDisplay" class="text-sm font-bold text-white">Date: Loading...</p>
           <span id="cloudSyncStatus" class="text-[10px] bg-blue-900 px-2 py-0.5 rounded text-blue-200 border border-blue-500">Cloud Ready</span>
         </div>
         
-        <!-- Custom Vehicle Name / Registration Input -->
         <div class="flex items-center gap-2 bg-blue-900 border-2 border-blue-400 rounded-lg px-3 py-1 shadow-inner w-full sm:w-auto justify-between">
           <div class="flex items-center gap-2">
             <i class="fas fa-truck text-blue-200 text-sm"></i>
@@ -65,7 +60,6 @@
         </div>
       </div>
 
-      <!-- Line 2: Big 3D Action Buttons -->
       <div class="max-w-4xl mx-auto px-4 py-2 flex items-center justify-between gap-2 overflow-x-auto custom-scrollbar">
         <button onclick="exportWhatsApp()" class="btn-3d bg-green-600 border-green-800 hover:bg-green-500 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap">
           <i class="fab fa-whatsapp text-sm"></i> WhatsApp
@@ -85,14 +79,12 @@
         <button onclick="resetChecks()" class="btn-3d bg-amber-700 border-amber-900 hover:bg-amber-600 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap" title="Reset check marks">
           <i class="fas fa-rotate-left text-sm"></i> Reset Checks
         </button>
-        <!-- NEW: Clear Current Day Data Button -->
         <button onclick="clearCurrentDayData()" class="btn-3d bg-red-600 border-red-800 hover:bg-red-500 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap" title="Clear all items and routes for this specific date only">
           <i class="fas fa-calendar-xmark text-sm"></i> Clear Day Data
         </button>
       </div>
     </div>
 
-    <!-- Live Progress Bar -->
     <div class="bg-blue-900 px-4 py-1.5 text-xs border-t border-blue-800">
       <div class="max-w-4xl mx-auto flex justify-between items-center mb-1">
         <span id="progressText" class="font-medium text-blue-100">0 of 0 items loaded (0%)</span>
@@ -104,10 +96,8 @@
     </div>
   </header>
 
-  <!-- Controls Section -->
   <main class="max-w-4xl mx-auto w-full p-2 sm:p-3 flex-1 flex flex-col gap-2.5">
     <div class="bg-white rounded-lg p-2.5 shadow-sm flex flex-col md:flex-row gap-2.5 justify-between items-center">
-      <!-- Filter Tabs -->
       <div class="flex gap-1 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 custom-scrollbar text-xs font-semibold">
         <button onclick="setFilter('all')" id="btn-all" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white shadow-sm whitespace-nowrap">All Items</button>
         <button onclick="setFilter('pending')" id="btn-pending" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap">Pending</button>
@@ -117,18 +107,14 @@
       </div>
     </div>
 
-    <!-- Area Filter Pills -->
     <div id="areaPills" class="flex gap-1.5 overflow-x-auto pb-1 text-xs items-center">
       <span class="text-slate-500 py-0.5 font-semibold flex items-center"><i class="fas fa-location-dot mr-1"></i> Area:</span>
       <button onclick="setAreaFilter('ALL')" id="area-ALL" class="px-2.5 py-0.5 rounded-full bg-slate-800 text-white font-medium whitespace-nowrap">All Areas</button>
     </div>
 
-    <!-- Main Content List -->
     <div id="itemsContainer" class="flex flex-col gap-2.5">
-      <!-- Items dynamically rendered here -->
     </div>
 
-    <!-- Stops Overview View (Hidden by default) -->
     <div id="stopsContainer" class="hidden bg-white rounded-lg shadow p-3">
       <h2 class="text-md font-bold mb-2 text-slate-700 border-b pb-1.5">Route Sequence Summary</h2>
       <div class="overflow-x-auto">
@@ -143,53 +129,81 @@
             </tr>
           </thead>
           <tbody id="stopsTableBody">
-            <!-- Dynamic stop rows -->
           </tbody>
         </table>
       </div>
     </div>
 
-    <!-- Route Editor View (Hidden by default) -->
-    <div id="routeEditorContainer" class="hidden bg-white rounded-lg shadow p-3 flex flex-col gap-2.5">
-      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-1.5 gap-2">
+    <!-- Route Editor View with Separate Interactive & Sortable Vehicle Tables -->
+    <div id="routeEditorContainer" class="hidden bg-white rounded-lg shadow p-3 flex flex-col gap-4">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-2 gap-2">
         <div>
-          <h2 class="text-md font-bold text-slate-700">Interactive Route & Vehicle Assignment</h2>
-          <p class="text-xs text-slate-500">Assign Stop numbers (e.g. 6.1 for auto-resequence). Press <b>Ctrl + Enter</b> to quick save.</p>
+          <h2 class="text-md font-bold text-slate-700">Vehicle-Wise Route & Stop Management</h2>
+          <p class="text-xs text-slate-500">Edit Sr No., move parties between vehicles, and click headers to sort each vehicle independently.</p>
         </div>
-        <div class="flex items-center gap-2 w-full sm:w-auto">
-          <select id="routeAreaFilter" onchange="renderRouteEditor()" class="p-1 border border-slate-300 rounded text-xs bg-slate-50 font-semibold focus:outline-none">
-            <option value="ALL">All Areas</option>
-          </select>
-          <button onclick="saveRouteEdits()" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded shadow whitespace-nowrap"><i class="fas fa-floppy-disk mr-1"></i> Save Route</button>
+        <div class="flex items-center gap-2">
+          <button onclick="saveRouteEdits()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded shadow whitespace-nowrap"><i class="fas fa-floppy-disk mr-1"></i> Save All Routes</button>
         </div>
       </div>
-      <div class="overflow-x-auto">
-        <table class="w-full text-left border-collapse text-xs">
-          <thead>
-            <tr class="bg-slate-100 text-slate-600 uppercase font-bold border-b">
-              <th class="p-1.5 w-24 cursor-pointer hover:bg-slate-200 transition" onclick="sortRouteTable('stop')">
-                Stop # <i id="sortIcon-stop" class="fas fa-sort ml-1 text-slate-400"></i>
-              </th>
-              <th class="p-1.5 w-36 cursor-pointer hover:bg-slate-200 transition" onclick="sortRouteTable('vehicle')">
-                Vehicle / Reg # <i id="sortIcon-vehicle" class="fas fa-sort ml-1 text-slate-400"></i>
-              </th>
-              <th class="p-1.5 w-36 cursor-pointer hover:bg-slate-200 transition" onclick="sortRouteTable('area')">
-                Area <i id="sortIcon-area" class="fas fa-sort ml-1 text-slate-400"></i>
-              </th>
-              <th class="p-1.5 cursor-pointer hover:bg-slate-200 transition" onclick="sortRouteTable('party')">
-                Party / Customer Name <i id="sortIcon-party" class="fas fa-sort ml-1 text-slate-400"></i>
-              </th>
-            </tr>
-          </thead>
-          <tbody id="routeEditorTableBody">
-            <!-- Dynamic route editor rows -->
-          </tbody>
-        </table>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <!-- Vehicle 1 Table Column -->
+        <div class="border rounded-lg p-2 bg-slate-50 flex flex-col gap-2">
+          <div class="flex justify-between items-center bg-blue-800 text-white px-3 py-1.5 rounded font-bold text-xs">
+            <span id="v1TableTitle">Vehicle 1</span>
+            <span class="text-[10px] bg-blue-900 px-2 py-0.5 rounded">Independent Fleet</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs bg-white rounded shadow-sm">
+              <thead>
+                <tr class="bg-slate-100 text-slate-600 uppercase font-bold border-b">
+                  <th class="p-1.5 w-16 cursor-pointer hover:bg-slate-200 transition" onclick="sortVehicleTable('V1', 'sr')">
+                    Sr No. <i id="sortIcon-V1-sr" class="fas fa-sort ml-0.5 text-slate-400"></i>
+                  </th>
+                  <th class="p-1.5 cursor-pointer hover:bg-slate-200 transition" onclick="sortVehicleTable('V1', 'party')">
+                    Party Name <i id="sortIcon-V1-party" class="fas fa-sort ml-0.5 text-slate-400"></i>
+                  </th>
+                  <th class="p-1.5 w-24 cursor-pointer hover:bg-slate-200 transition" onclick="sortVehicleTable('V1', 'area')">
+                    Area <i id="sortIcon-V1-area" class="fas fa-sort ml-0.5 text-slate-400"></i>
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="vehicle1TableBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Vehicle 2 Table Column -->
+        <div class="border rounded-lg p-2 bg-slate-50 flex flex-col gap-2">
+          <div class="flex justify-between items-center bg-indigo-800 text-white px-3 py-1.5 rounded font-bold text-xs">
+            <span id="v2TableTitle">Vehicle 2</span>
+            <span class="text-[10px] bg-indigo-900 px-2 py-0.5 rounded">Independent Fleet</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs bg-white rounded shadow-sm">
+              <thead>
+                <tr class="bg-slate-100 text-slate-600 uppercase font-bold border-b">
+                  <th class="p-1.5 w-16 cursor-pointer hover:bg-slate-200 transition" onclick="sortVehicleTable('V2', 'sr')">
+                    Sr No. <i id="sortIcon-V2-sr" class="fas fa-sort ml-0.5 text-slate-400"></i>
+                  </th>
+                  <th class="p-1.5 cursor-pointer hover:bg-slate-200 transition" onclick="sortVehicleTable('V2', 'party')">
+                    Party Name <i id="sortIcon-V2-party" class="fas fa-sort ml-0.5 text-slate-400"></i>
+                  </th>
+                  <th class="p-1.5 w-24 cursor-pointer hover:bg-slate-200 transition" onclick="sortVehicleTable('V2', 'area')">
+                    Area <i id="sortIcon-V2-area" class="fas fa-sort ml-0.5 text-slate-400"></i>
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="vehicle2TableBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   </main>
 
-  <!-- Add Item Modal -->
   <div id="addItemModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-4 flex flex-col gap-2.5">
       <div class="flex justify-between items-center border-b pb-1.5">
@@ -220,7 +234,6 @@
     </div>
   </div>
 
-  <!-- WhatsApp Export Modal -->
   <div id="whatsappModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-4 flex flex-col gap-2.5">
       <div class="flex justify-between items-center border-b pb-1.5">
@@ -237,7 +250,6 @@
     </div>
   </div>
 
-  <!-- Import / Paste Modal -->
   <div id="importModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-xl shadow-xl w-full max-w-xl p-4 flex flex-col gap-2.5">
       <div class="flex justify-between items-center border-b pb-1.5">
@@ -271,7 +283,6 @@
     </div>
   </div>
 
-  <!-- History Archive Modal -->
   <div id="historyModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
     <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-4 flex flex-col gap-2.5">
       <div class="flex justify-between items-center border-b pb-1.5">
@@ -280,7 +291,6 @@
       </div>
       <p class="text-xs text-slate-600">Select a past delivery date to check what items were sent:</p>
       <div id="historyListContainer" class="flex flex-col gap-1.5 max-h-60 overflow-y-auto pr-1">
-        <!-- Dynamically populated past dates -->
       </div>
       <div class="flex justify-end pt-1.5 border-t">
         <button onclick="closeHistoryModal()" class="px-3.5 py-1 text-xs font-semibold bg-slate-200 text-slate-700 rounded hover:bg-slate-300">Close</button>
@@ -289,7 +299,6 @@
   </div>
 
   <script>
-    // --- JSONBIN.IO CONFIGURATION ---
     const BIN_ID = '6aea1cdaffd5d16053a339a4';
     const MASTER_KEY = '$2a$10$ibMLtrJqDI6t5iQ.0ChHD.1csQ2bNkjh8fb7R/j9YQ5LDbrGosa5O';
     const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
@@ -299,10 +308,14 @@
     let allHistoryData = {};
     let currentFilter = 'all';
     let currentAreaFilter = 'ALL';
-    let routeSortCol = 'stop';
-    let routeSortAsc = true;
     let isHeaderVisible = true;
     let isSyncing = false;
+
+    // Sorting states for V1 and V2 tables
+    let v1SortCol = 'sr';
+    let v1SortAsc = true;
+    let v2SortCol = 'sr';
+    let v2SortAsc = true;
 
     function toggleHeader() {
       isHeaderVisible = !isHeaderVisible;
@@ -482,6 +495,9 @@
       let regMap = dayData && dayData["Vehicle 1"] && dayData["Vehicle 1"].regNumbers ? dayData["Vehicle 1"].regNumbers : { "Vehicle 1": "Vehicle 1", "Vehicle 2": "Vehicle 2" };
       let currentVal = regMap[activeVehicle] || activeVehicle;
       document.getElementById('vehicleRegInput').value = currentVal;
+      
+      document.getElementById('v1TableTitle').innerText = regMap["Vehicle 1"] || "Vehicle 1";
+      document.getElementById('v2TableTitle').innerText = regMap["Vehicle 2"] || "Vehicle 2";
     }
 
     function updateVehicleRegName() {
@@ -500,6 +516,9 @@
           opt.text = val;
         }
       }
+
+      document.getElementById('v1TableTitle').innerText = dayData["Vehicle 1"].regNumbers["Vehicle 1"] || "Vehicle 1";
+      document.getElementById('v2TableTitle').innerText = dayData["Vehicle 1"].regNumbers["Vehicle 2"] || "Vehicle 2";
       
       saveHistory();
       updateProgress();
@@ -694,16 +713,17 @@
       });
     }
 
-    function sortRouteTable(col) {
-      if (routeSortCol === col) {
-        routeSortAsc = !routeSortAsc;
+    // Toggle sorting column or direction for specific vehicle table
+    function sortVehicleTable(vehKey, col) {
+      if (vehKey === 'V1') {
+        if (v1SortCol === col) { v1SortAsc = !v1SortAsc; } else { v1SortCol = col; v1SortAsc = true; }
       } else {
-        routeSortCol = col;
-        routeSortAsc = true;
+        if (v2SortCol === col) { v2SortAsc = !v2SortAsc; } else { v2SortCol = col; v2SortAsc = true; }
       }
       renderRouteEditor();
     }
 
+    // Render separate side-by-side tables for Vehicle 1 and Vehicle 2 with sortable headings and vehicle assignment options
     function renderRouteEditor() {
       let dayData = allHistoryData[activeDate];
       if (!dayData) return;
@@ -714,127 +734,186 @@
           allItems = allItems.concat(dayData[vName].items);
         }
       });
-      
-      let areas = [...new Set(allItems.map(d => d.area).filter(Boolean))].sort();
-      let areaSelect = document.getElementById('routeAreaFilter');
-      let selectedArea = areaSelect.value;
-      
-      areaSelect.innerHTML = `<option value="ALL">All Areas (${areas.length})</option>`;
-      areas.forEach(a => {
-        areaSelect.innerHTML += `<option value="${a}" ${a === selectedArea ? 'selected' : ''}>Area: ${a}</option>`;
-      });
 
-      document.getElementById('sortIcon-stop').className = routeSortCol === 'stop' ? (routeSortAsc ? 'fas fa-sort-up ml-1 text-blue-600' : 'fas fa-sort-down ml-1 text-blue-600') : 'fas fa-sort ml-1 text-slate-400';
-      document.getElementById('sortIcon-vehicle').className = routeSortCol === 'vehicle' ? (routeSortAsc ? 'fas fa-sort-up ml-1 text-blue-600' : 'fas fa-sort-down ml-1 text-blue-600') : 'fas fa-sort ml-1 text-slate-400';
-      document.getElementById('sortIcon-area').className = routeSortCol === 'area' ? (routeSortAsc ? 'fas fa-sort-up ml-1 text-blue-600' : 'fas fa-sort-down ml-1 text-blue-600') : 'fas fa-sort ml-1 text-slate-400';
-      document.getElementById('sortIcon-party').className = routeSortCol === 'party' ? (routeSortAsc ? 'fas fa-sort-up ml-1 text-blue-600' : 'fas fa-sort-down ml-1 text-blue-600') : 'fas fa-sort ml-1 text-slate-400';
-
-      const tbody = document.getElementById('routeEditorTableBody');
-      tbody.innerHTML = '';
-
-      let regMap = dayData && dayData["Vehicle 1"] && dayData["Vehicle 1"].regNumbers ? dayData["Vehicle 1"].regNumbers : { "Vehicle 1": "Vehicle 1", "Vehicle 2": "Vehicle 2" };
+      let routes = dayData["Vehicle 1"]?.routes || {};
+      let assignments = dayData["Vehicle 1"]?.assignments || {};
+      let regMap = dayData["Vehicle 1"]?.regNumbers || { "Vehicle 1": "Vehicle 1", "Vehicle 2": "Vehicle 2" };
 
       let uniqueStops = {};
       allItems.forEach(item => {
         let rKey = getRouteKey(item.customer, item.area);
         if (!uniqueStops[rKey]) {
+          let assignedVeh = assignments[rKey] || 'Vehicle 1';
           uniqueStops[rKey] = {
+            key: rKey,
             customer: item.customer,
             area: item.area || 'General',
-            stopNo: item.stopNo !== undefined && item.stopNo !== 999 ? item.stopNo : '',
-            assignedVehicle: item.assignedVehicle || 'Vehicle 1'
+            stopNo: routes[rKey] !== undefined && routes[rKey] !== 999 ? routes[rKey] : '',
+            assignedVehicle: assignedVeh
           };
         }
       });
 
-      let sortedKeys = Object.keys(uniqueStops).sort((keyA, keyB) => {
-        let sA = uniqueStops[keyA];
-        let sB = uniqueStops[keyB];
+      let stopList = Object.values(uniqueStops);
+
+      // Separate stops by vehicle column
+      let v1Stops = stopList.filter(s => s.assignedVehicle === 'Vehicle 1');
+      let v2Stops = stopList.filter(s => s.assignedVehicle === 'Vehicle 2');
+
+      // Sort V1 stops based on selected column
+      v1Stops.sort((a, b) => {
         let valA, valB;
-
-        if (routeSortCol === 'stop') {
-          valA = sA.stopNo === '' ? 99999 : parseFloat(sA.stopNo);
-          valB = sB.stopNo === '' ? 99999 : parseFloat(sB.stopNo);
-          if (valA !== valB) return routeSortAsc ? valA - valB : valB - valA;
-          return sA.customer.localeCompare(sB.customer);
-        } else if (routeSortCol === 'vehicle') {
-          valA = sA.assignedVehicle.toLowerCase();
-          valB = sB.assignedVehicle.toLowerCase();
-        } else if (routeSortCol === 'area') {
-          valA = sA.area.toLowerCase();
-          valB = sB.area.toLowerCase();
+        if (v1SortCol === 'sr') {
+          valA = a.stopNo === '' ? 99999 : parseFloat(a.stopNo);
+          valB = b.stopNo === '' ? 99999 : parseFloat(b.stopNo);
+          if (valA !== valB) return v1SortAsc ? valA - valB : valB - valA;
+          return a.customer.localeCompare(b.customer);
+        } else if (v1SortCol === 'area') {
+          valA = a.area.toLowerCase();
+          valB = b.area.toLowerCase();
         } else {
-          valA = sA.customer.toLowerCase();
-          valB = sB.customer.toLowerCase();
+          valA = a.customer.toLowerCase();
+          valB = b.customer.toLowerCase();
         }
-
-        if (valA !== valB) {
-          return routeSortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
-        }
-        return sA.customer.localeCompare(sB.customer);
+        if (valA !== valB) return v1SortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        return a.customer.localeCompare(b.customer);
       });
 
-      sortedKeys.forEach((key) => {
-        let stopObj = uniqueStops[key];
-        if (selectedArea !== 'ALL' && stopObj.area !== selectedArea) return;
-
-        let v1Label = regMap["Vehicle 1"] || "Vehicle 1";
-        let v2Label = regMap["Vehicle 2"] || "Vehicle 2";
-
-        const tr = document.createElement('tr');
-        tr.className = 'border-b hover:bg-slate-50';
-        tr.innerHTML = `
-          <td class="p-1.5">
-            <input type="number" step="any" placeholder="" data-routekey="${key}" class="route-stop-input w-20 p-1 border rounded text-xs font-mono font-bold text-center focus:ring-2 focus:ring-blue-500" value="${stopObj.stopNo}">
-          </td>
-          <td class="p-1.5">
-            <select data-vehkey="${key}" class="route-vehicle-select p-1 border rounded text-xs font-semibold bg-white text-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-500">
-              <option value="Vehicle 1" ${stopObj.assignedVehicle === 'Vehicle 1' ? 'selected' : ''}>${v1Label}</option>
-              <option value="Vehicle 2" ${stopObj.assignedVehicle === 'Vehicle 2' ? 'selected' : ''}>${v2Label}</option>
-            </select>
-          </td>
-          <td class="p-1.5 font-bold text-blue-800">${stopObj.area}</td>
-          <td class="p-1.5 font-bold text-slate-800 text-sm">${stopObj.customer}</td>
-        `;
-        tbody.appendChild(tr);
+      // Sort V2 stops based on selected column
+      v2Stops.sort((a, b) => {
+        let valA, valB;
+        if (v2SortCol === 'sr') {
+          valA = a.stopNo === '' ? 99999 : parseFloat(a.stopNo);
+          valB = b.stopNo === '' ? 99999 : parseFloat(b.stopNo);
+          if (valA !== valB) return v2SortAsc ? valA - valB : valB - valA;
+          return a.customer.localeCompare(b.customer);
+        } else if (v2SortCol === 'area') {
+          valA = a.area.toLowerCase();
+          valB = b.area.toLowerCase();
+        } else {
+          valA = a.customer.toLowerCase();
+          valB = b.customer.toLowerCase();
+        }
+        if (valA !== valB) return v2SortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        return a.customer.localeCompare(b.customer);
       });
+
+      // Update sort icon indicators for V1 and V2
+      ['sr', 'party', 'area'].forEach(c => {
+        let elV1 = document.getElementById(`sortIcon-V1-${c}`);
+        if (elV1) elV1.className = v1SortCol === c ? (v1SortAsc ? 'fas fa-sort-up ml-0.5 text-blue-600' : 'fas fa-sort-down ml-0.5 text-blue-600') : 'fas fa-sort ml-0.5 text-slate-400';
+        
+        let elV2 = document.getElementById(`sortIcon-V2-${c}`);
+        if (elV2) elV2.className = v2SortCol === c ? (v2SortAsc ? 'fas fa-sort-up ml-0.5 text-indigo-600' : 'fas fa-sort-down ml-0.5 text-indigo-600') : 'fas fa-sort ml-0.5 text-slate-400';
+      });
+
+      let v1Label = regMap["Vehicle 1"] || "Vehicle 1";
+      let v2Label = regMap["Vehicle 2"] || "Vehicle 2";
+
+      // Render Vehicle 1 Column Table
+      let v1Body = document.getElementById('vehicle1TableBody');
+      v1Body.innerHTML = '';
+      if (v1Stops.length === 0) {
+        v1Body.innerHTML = `<tr><td colspan="3" class="p-3 text-center text-slate-400 text-xs">No stops assigned to ${v1Label}</td></tr>`;
+      } else {
+        v1Stops.forEach(s => {
+          const tr = document.createElement('tr');
+          tr.className = 'border-b hover:bg-slate-50';
+          tr.innerHTML = `
+            <td class="p-1.5">
+              <input type="number" step="any" data-routekey="${s.key}" class="route-stop-input w-16 p-1 border rounded text-xs font-mono font-bold text-center focus:ring-2 focus:ring-blue-500" value="${s.stopNo}">
+            </td>
+            <td class="p-1.5">
+              <div class="font-bold text-slate-800">${s.customer}</div>
+              <div class="mt-1">
+                <select data-vehkey="${s.key}" class="route-veh-select text-[10px] p-0.5 border rounded font-semibold bg-slate-50 text-blue-700 focus:outline-none">
+                  <option value="Vehicle 1" selected>Move to: ${v1Label}</option>
+                  <option value="Vehicle 2">Move to: ${v2Label}</option>
+                </select>
+              </div>
+            </td>
+            <td class="p-1.5 font-bold text-blue-800 text-xs">${s.area}</td>
+          `;
+          v1Body.appendChild(tr);
+        });
+      }
+
+      // Render Vehicle 2 Column Table
+      let v2Body = document.getElementById('vehicle2TableBody');
+      v2Body.innerHTML = '';
+      if (v2Stops.length === 0) {
+        v2Body.innerHTML = `<tr><td colspan="3" class="p-3 text-center text-slate-400 text-xs">No stops assigned to ${v2Label}</td></tr>`;
+      } else {
+        v2Stops.forEach(s => {
+          const tr = document.createElement('tr');
+          tr.className = 'border-b hover:bg-slate-50';
+          tr.innerHTML = `
+            <td class="p-1.5">
+              <input type="number" step="any" data-routekey="${s.key}" class="route-stop-input w-16 p-1 border rounded text-xs font-mono font-bold text-center focus:ring-2 focus:ring-indigo-500" value="${s.stopNo}">
+            </td>
+            <td class="p-1.5">
+              <div class="font-bold text-slate-800">${s.customer}</div>
+              <div class="mt-1">
+                <select data-vehkey="${s.key}" class="route-veh-select text-[10px] p-0.5 border rounded font-semibold bg-slate-50 text-indigo-700 focus:outline-none">
+                  <option value="Vehicle 1">Move to: ${v1Label}</option>
+                  <option value="Vehicle 2" selected>Move to: ${v2Label}</option>
+                </select>
+              </div>
+            </td>
+            <td class="p-1.5 font-bold text-indigo-800 text-xs">${s.area}</td>
+          `;
+          v2Body.appendChild(tr);
+        });
+      }
     }
 
+    // Save routes and vehicle shifting assignments independently
     function saveRouteEdits() {
       let dayData = allHistoryData[activeDate];
       if (!dayData) return;
 
       let inputs = document.querySelectorAll('.route-stop-input');
-      let vehSelects = document.querySelectorAll('.route-vehicle-select');
+      let vehSelects = document.querySelectorAll('.route-veh-select');
       
-      let rawEntries = [];
+      let newRoutes = {};
       let newAssignments = {};
+      let entriesByVeh = { "Vehicle 1": [], "Vehicle 2": [] };
 
-      inputs.forEach(input => {
-        let rKey = input.getAttribute('data-routekey');
-        let valStr = input.value.trim();
-        let numVal = valStr !== '' ? parseFloat(valStr) : 99999;
-        rawEntries.push({ rKey, numVal });
-      });
-
+      // Collect new vehicle assignments from dropdowns
       vehSelects.forEach(sel => {
         let rKey = sel.getAttribute('data-vehkey');
         newAssignments[rKey] = sel.value;
       });
 
-      rawEntries.sort((a, b) => {
-        if (a.numVal !== b.numVal) return a.numVal - b.numVal;
-        return a.rKey.localeCompare(b.rKey);
+      // Collect Sr No inputs grouped by assigned vehicle
+      inputs.forEach(input => {
+        let rKey = input.getAttribute('data-routekey');
+        let assignedVeh = newAssignments[rKey] || 'Vehicle 1';
+        let valStr = input.value.trim();
+        let numVal = valStr !== '' ? parseFloat(valStr) : 99999;
+        
+        entriesByVeh[assignedVeh].push({ rKey, numVal });
       });
 
-      let newRoutes = {};
-      let currentSeq = 1;
-      rawEntries.forEach(entry => {
-        if (entry.numVal === 99999) {
-          newRoutes[entry.rKey] = 999;
-        } else {
-          newRoutes[entry.rKey] = currentSeq++;
-        }
+      // Independently sequence numbers for each vehicle column
+      ['Vehicle 1', 'Vehicle 2'].forEach(veh => {
+        let entries = entriesByVeh[veh];
+        
+        entries.sort((a, b) => {
+          if (a.numVal !== b.numVal) return a.numVal - b.numVal;
+          return a.rKey.localeCompare(b.rKey);
+        });
+
+        let currentSeq = 1;
+
+        entries.forEach(entry => {
+          if (entry.numVal === 99999) {
+            newRoutes[entry.rKey] = 999;
+          } else {
+            // Preserve user-specified Sr No (e.g. 21, 22) or auto-sequence cleanly
+            newRoutes[entry.rKey] = (veh === 'Vehicle 2' && entry.numVal >= 20) ? Math.floor(entry.numVal) : (veh === 'Vehicle 2' ? entry.numVal : currentSeq++);
+          }
+        });
       });
 
       if (!dayData["Vehicle 1"]) dayData["Vehicle 1"] = { items: [], routes: {}, assignments: {}, regNumbers: {} };
@@ -871,11 +950,10 @@
       renderAreaPills();
       renderList();
       updateProgress();
-      alert('Route successfully re-sequenced, saved & synced!');
+      alert('Vehicle routes and party assignments saved successfully!');
       setFilter('all');
     }
 
-    // NEW: Clear data for the current active date only
     function clearCurrentDayData() {
       if (confirm(`Are you sure you want to clear all data and stops for date ${activeDate}?`)) {
         allHistoryData[activeDate] = {
