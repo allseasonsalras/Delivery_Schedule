@@ -82,8 +82,12 @@
         <button onclick="loadFromCloud(true)" class="btn-3d bg-cyan-700 border-cyan-900 hover:bg-cyan-600 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap" title="Sync data from cloud">
           <i class="fas fa-cloud-arrow-down text-sm"></i> Sync Cloud
         </button>
-        <button onclick="resetChecks()" class="btn-3d bg-red-600 border-red-800 hover:bg-red-500 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap">
-          <i class="fas fa-rotate-left text-sm"></i> Reset
+        <button onclick="resetChecks()" class="btn-3d bg-amber-700 border-amber-900 hover:bg-amber-600 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap" title="Reset check marks">
+          <i class="fas fa-rotate-left text-sm"></i> Reset Checks
+        </button>
+        <!-- NEW: Clear Current Day Data Button -->
+        <button onclick="clearCurrentDayData()" class="btn-3d bg-red-600 border-red-800 hover:bg-red-500 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap" title="Clear all items and routes for this specific date only">
+          <i class="fas fa-calendar-xmark text-sm"></i> Clear Day Data
         </button>
       </div>
     </div>
@@ -355,7 +359,6 @@
       renderList();
       updateProgress();
 
-      // Suggestion 2: Global listener for Ctrl + Enter or Cmd + Enter to quickly save route edits
       document.addEventListener('keydown', function(e) {
         if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
           if (currentFilter === 'routeEditor') {
@@ -872,6 +875,21 @@
       setFilter('all');
     }
 
+    // NEW: Clear data for the current active date only
+    function clearCurrentDayData() {
+      if (confirm(`Are you sure you want to clear all data and stops for date ${activeDate}?`)) {
+        allHistoryData[activeDate] = {
+          "Vehicle 1": { items: [], routes: {}, assignments: {}, regNumbers: { "Vehicle 1": "Vehicle 1", "Vehicle 2": "Vehicle 2" } },
+          "Vehicle 2": { items: [], routes: {}, assignments: {} }
+        };
+        saveHistory();
+        renderAreaPills();
+        renderList();
+        updateProgress();
+        alert(`Successfully cleared all data for ${activeDate}!`);
+      }
+    }
+
     function carryOverPending() {
       let vehicleData = getActiveDay();
       let pendingItems = vehicleData.items.filter(i => !i.checked);
@@ -1012,7 +1030,6 @@
       document.getElementById('vouchersCountText').innerText = `${stopsCount} Stops Total (${currentVehicleLabel})`;
     }
 
-    // Suggestion 3: Include item summary breakdown in exported WhatsApp route text
     function exportWhatsApp() {
       let vehicleData = getActiveDay();
       if (vehicleData.items.length === 0) {
@@ -1244,7 +1261,6 @@
           vehicleData.items = vehicleData.items.concat(uniqueNewItems);
         }
 
-        // Suggestion 1: Auto-switch area filter to "ALL" upon new import so newly added items are immediately visible
         currentAreaFilter = 'ALL';
 
         applyRouteSorting();
