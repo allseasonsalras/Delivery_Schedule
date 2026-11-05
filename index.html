@@ -103,7 +103,7 @@
   <!-- Controls Section -->
   <main class="max-w-4xl mx-auto w-full p-2 sm:p-3 flex-1 flex flex-col gap-2.5">
     <div class="bg-white rounded-lg p-2.5 shadow-sm flex flex-col md:flex-row gap-2.5 justify-between items-center">
-      <!-- Filter Tabs (Search bar removed) -->
+      <!-- Filter Tabs -->
       <div class="flex gap-1 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 custom-scrollbar text-xs font-semibold">
         <button onclick="setFilter('all')" id="btn-all" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white shadow-sm whitespace-nowrap">All Items</button>
         <button onclick="setFilter('pending')" id="btn-pending" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap">Pending</button>
@@ -150,7 +150,7 @@
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-1.5 gap-2">
         <div>
           <h2 class="text-md font-bold text-slate-700">Interactive Route & Vehicle Assignment</h2>
-          <p class="text-xs text-slate-500">Assign Stop numbers and choose which Vehicle takes each delivery, then click Save.</p>
+          <p class="text-xs text-slate-500">Assign Stop numbers (e.g., decimals like 6.1 will auto-resequence) and choose which Vehicle takes each delivery, then click Save.</p>
         </div>
         <div class="flex items-center gap-2 w-full sm:w-auto">
           <select id="routeAreaFilter" onchange="renderRouteEditor()" class="p-1 border border-slate-300 rounded text-xs bg-slate-50 font-semibold focus:outline-none">
@@ -290,6 +290,7 @@
     const MASTER_KEY = '$2a$10$ibMLtrJqDI6t5iQ.0ChHD.1csQ2bNkjh8fb7R/j9YQ5LDbrGosa5O';
     const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
+    // Requirement 3: Always default to today's date when opened
     let activeDate = new Date().toISOString().split('T')[0];
     let activeVehicle = 'Vehicle 1';
     let allHistoryData = {};
@@ -339,11 +340,12 @@
         }
       }
 
-      if (Object.keys(allHistoryData).length === 0) {
-        allHistoryData[activeDate] = { "Vehicle 1": JSON.parse(JSON.stringify(defaultData)), "Vehicle 2": { items: [], routes: {}, assignments: {} } };
-      } else {
-        const dates = Object.keys(allHistoryData).sort();
-        activeDate = dates[dates.length - 1];
+      // If today's date doesn't exist in records yet, initialize it
+      if (!allHistoryData[activeDate]) {
+        allHistoryData[activeDate] = { 
+          "Vehicle 1": JSON.parse(JSON.stringify(defaultData)), 
+          "Vehicle 2": { items: [], routes: {}, assignments: {} } 
+        };
       }
 
       document.getElementById('importDateInput').value = activeDate;
@@ -404,6 +406,15 @@
             allHistoryData = resJson.record;
             localStorage.setItem('loadingAppHistoryV18', JSON.stringify(allHistoryData));
             updateSyncStatus('Synced', 'bg-green-600');
+            
+            // Ensure today's date exists even after cloud sync
+            if (!allHistoryData[activeDate]) {
+              allHistoryData[activeDate] = { 
+                "Vehicle 1": JSON.parse(JSON.stringify(defaultData)), 
+                "Vehicle 2": { items: [], routes: {}, assignments: {} } 
+              };
+            }
+
             if (showAlert) {
               alert('Cloud data synchronized successfully!');
               applyRouteSorting();
@@ -603,7 +614,6 @@
               <h2 class="text-base sm:text-lg font-extrabold text-slate-900 leading-snug">${custName}</h2>
             </div>
             <div class="flex items-center gap-1.5">
-              <!-- Increased Area Name Size -->
               <span class="text-xs sm:text-sm font-bold px-3 py-1 bg-blue-100 text-blue-800 rounded-md shadow-sm border border-blue-200">
                 <i class="fas fa-location-dot mr-1"></i>${areaName}
               </span>
@@ -733,8 +743,8 @@
         let valA, valB;
 
         if (routeSortCol === 'stop') {
-          valA = sA.stopNo === '' ? 99999 : parseInt(sA.stopNo);
-          valB = sB.stopNo === '' ? 99999 : parseInt(sB.stopNo);
+          valA = sA.stopNo === '' ? 99999 : parseFloat(sA.stopNo);
+          valB = sB.stopNo === '' ? 99999 : parseFloat(sB.stopNo);
           if (valA !== valB) return routeSortAsc ? valA - valB : valB - valA;
           return sA.customer.localeCompare(sB.customer);
         } else if (routeSortCol === 'vehicle') {
@@ -765,7 +775,7 @@
         tr.className = 'border-b hover:bg-slate-50';
         tr.innerHTML = `
           <td class="p-1.5">
-            <input type="number" placeholder="" data-routekey="${key}" class="route-stop-input w-20 p-1 border rounded text-xs font-mono font-bold text-center focus:ring-2 focus:ring-blue-500" value="${stopObj.stopNo}">
+            <input type="number" step="any" placeholder="" data-routekey="${key}" class="route-stop-input w-20 p-1 border rounded text-xs font-mono font-bold text-center focus:ring-2 focus:ring-blue-500" value="${stopObj.stopNo}">
           </td>
           <td class="p-1.5">
             <select data-vehkey="${key}" class="route-vehicle-select p-1 border rounded text-xs font-semibold bg-white text-blue-700 focus:outline-none focus:ring-1 focus:ring-blue-500">
@@ -780,6 +790,7 @@
       });
     }
 
+    // Requirement 2: Auto-resequence stop numbers when fractional / inserted (e.g. 6.1 becomes sequential integers shifting others above)
     function saveRouteEdits() {
       let dayData = allHistoryData[activeDate];
       if (!dayData) return;
@@ -787,20 +798,36 @@
       let inputs = document.querySelectorAll('.route-stop-input');
       let vehSelects = document.querySelectorAll('.route-vehicle-select');
       
-      let newRoutes = {};
+      let rawEntries = [];
       let newAssignments = {};
 
       inputs.forEach(input => {
         let rKey = input.getAttribute('data-routekey');
-        let val = input.value.trim();
-        if (val !== '') {
-          newRoutes[rKey] = parseInt(val);
-        }
+        let valStr = input.value.trim();
+        let numVal = valStr !== '' ? parseFloat(valStr) : 99999;
+        rawEntries.push({ rKey, numVal });
       });
 
       vehSelects.forEach(sel => {
         let rKey = sel.getAttribute('data-vehkey');
         newAssignments[rKey] = sel.value;
+      });
+
+      // Sort entries by the user-entered numbers (supports decimals like 6.1 for precise insertion positioning)
+      rawEntries.sort((a, b) => {
+        if (a.numVal !== b.numVal) return a.numVal - b.numVal;
+        return a.rKey.localeCompare(b.rKey);
+      });
+
+      // Automatically re-sequence into clean consecutive integers (1, 2, 3, ...)
+      let newRoutes = {};
+      let currentSeq = 1;
+      rawEntries.forEach(entry => {
+        if (entry.numVal === 99999) {
+          newRoutes[entry.rKey] = 999; // unassigned / end
+        } else {
+          newRoutes[entry.rKey] = currentSeq++;
+        }
       });
 
       if (!dayData["Vehicle 1"]) dayData["Vehicle 1"] = { items: [], routes: {}, assignments: {}, regNumbers: {} };
@@ -837,7 +864,7 @@
       renderAreaPills();
       renderList();
       updateProgress();
-      alert('Route & Vehicle assignments saved & synced successfully!');
+      alert('Route successfully re-sequenced, saved & synced!');
       setFilter('all');
     }
 
@@ -954,13 +981,13 @@
       }
     }
 
+    // Requirement 1: Ensure ticking/checking items is immediately persisted and protected against resets
     function toggleCheck(id) {
       let vehicleData = getActiveDay();
       const item = vehicleData.items.find(d => d.id === id);
       if (item) {
         item.checked = !item.checked;
         saveHistory();
-        renderList();
         updateProgress();
       }
     }
@@ -1102,6 +1129,7 @@
           container.appendChild(div);
         });
       }
+      document.getElementById('historyModal').classList.add('hidden'); // Fix modal toggle visibility
       document.getElementById('historyModal').classList.remove('hidden');
     }
 
@@ -1175,11 +1203,20 @@
         }
       });
 
+      // Preserve existing checked status during merge/append if items already exist
+      let existingCheckedMap = {};
+      if (!overwrite && vehicleData.items) {
+        vehicleData.items.forEach(i => {
+          existingCheckedMap[`${i.customer}||${i.item}`] = i.checked;
+        });
+      }
+
       let newItems = rawItems.map(item => {
         let rKey = getRouteKey(item.customer, item.area);
         if (allHistoryData[activeDate]["Vehicle 1"] && !allHistoryData[activeDate]["Vehicle 1"].assignments[rKey]) {
           allHistoryData[activeDate]["Vehicle 1"].assignments[rKey] = targetVeh;
         }
+        let wasChecked = existingCheckedMap[`${item.customer}||${item.item}`] || false;
         return {
           id: idCounter++,
           vch: item.vch,
@@ -1188,7 +1225,7 @@
           item: item.item,
           qty: item.qty,
           unit: item.unit,
-          checked: false,
+          checked: wasChecked,
           assignedVehicle: targetVeh
         };
       });
@@ -1197,7 +1234,10 @@
         if (overwrite) {
           vehicleData.items = newItems;
         } else {
-          vehicleData.items = vehicleData.items.concat(newItems);
+          // Merge while avoiding duplicate entries if same items are pasted
+          let existingKeys = new Set(vehicleData.items.map(i => `${i.customer}||${i.item}||${i.qty}`));
+          let uniqueNewItems = newItems.filter(i => !existingKeys.has(`${i.customer}||${i.item}||${i.qty}`));
+          vehicleData.items = vehicleData.items.concat(uniqueNewItems);
         }
 
         applyRouteSorting();
@@ -1210,7 +1250,7 @@
         let dayData = allHistoryData[activeDate];
         let regMap = dayData && dayData["Vehicle 1"] && dayData["Vehicle 1"].regNumbers ? dayData["Vehicle 1"].regNumbers : { "Vehicle 1": "Vehicle 1", "Vehicle 2": "Vehicle 2" };
         let targetLabel = regMap[targetVeh] || targetVeh;
-        alert(`Successfully ${overwrite ? 'overwritten' : 'merged'} ${newItems.length} items into ${targetLabel} for date ${activeDate}!`);
+        alert(`Successfully ${overwrite ? 'overwritten' : 'merged'} items into ${targetLabel} for date ${activeDate}!`);
       } else {
         alert('Could not parse table. Make sure you copy the table columns from Excel.');
       }
