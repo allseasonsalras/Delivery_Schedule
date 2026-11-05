@@ -150,7 +150,7 @@
       <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-1.5 gap-2">
         <div>
           <h2 class="text-md font-bold text-slate-700">Interactive Route & Vehicle Assignment</h2>
-          <p class="text-xs text-slate-500">Assign Stop numbers (e.g., decimals like 6.1 will auto-resequence) and choose which Vehicle takes each delivery, then click Save.</p>
+          <p class="text-xs text-slate-500">Assign Stop numbers (e.g. 6.1 for auto-resequence). Press <b>Ctrl + Enter</b> to quick save.</p>
         </div>
         <div class="flex items-center gap-2 w-full sm:w-auto">
           <select id="routeAreaFilter" onchange="renderRouteEditor()" class="p-1 border border-slate-300 rounded text-xs bg-slate-50 font-semibold focus:outline-none">
@@ -290,7 +290,6 @@
     const MASTER_KEY = '$2a$10$ibMLtrJqDI6t5iQ.0ChHD.1csQ2bNkjh8fb7R/j9YQ5LDbrGosa5O';
     const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
 
-    // Requirement 3: Always default to today's date when opened
     let activeDate = new Date().toISOString().split('T')[0];
     let activeVehicle = 'Vehicle 1';
     let allHistoryData = {};
@@ -340,7 +339,6 @@
         }
       }
 
-      // If today's date doesn't exist in records yet, initialize it
       if (!allHistoryData[activeDate]) {
         allHistoryData[activeDate] = { 
           "Vehicle 1": JSON.parse(JSON.stringify(defaultData)), 
@@ -356,6 +354,16 @@
       renderAreaPills();
       renderList();
       updateProgress();
+
+      // Suggestion 2: Global listener for Ctrl + Enter or Cmd + Enter to quickly save route edits
+      document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+          if (currentFilter === 'routeEditor') {
+            e.preventDefault();
+            saveRouteEdits();
+          }
+        }
+      });
     }
 
     async function saveHistory() {
@@ -407,7 +415,6 @@
             localStorage.setItem('loadingAppHistoryV18', JSON.stringify(allHistoryData));
             updateSyncStatus('Synced', 'bg-green-600');
             
-            // Ensure today's date exists even after cloud sync
             if (!allHistoryData[activeDate]) {
               allHistoryData[activeDate] = { 
                 "Vehicle 1": JSON.parse(JSON.stringify(defaultData)), 
@@ -790,7 +797,6 @@
       });
     }
 
-    // Requirement 2: Auto-resequence stop numbers when fractional / inserted (e.g. 6.1 becomes sequential integers shifting others above)
     function saveRouteEdits() {
       let dayData = allHistoryData[activeDate];
       if (!dayData) return;
@@ -813,18 +819,16 @@
         newAssignments[rKey] = sel.value;
       });
 
-      // Sort entries by the user-entered numbers (supports decimals like 6.1 for precise insertion positioning)
       rawEntries.sort((a, b) => {
         if (a.numVal !== b.numVal) return a.numVal - b.numVal;
         return a.rKey.localeCompare(b.rKey);
       });
 
-      // Automatically re-sequence into clean consecutive integers (1, 2, 3, ...)
       let newRoutes = {};
       let currentSeq = 1;
       rawEntries.forEach(entry => {
         if (entry.numVal === 99999) {
-          newRoutes[entry.rKey] = 999; // unassigned / end
+          newRoutes[entry.rKey] = 999;
         } else {
           newRoutes[entry.rKey] = currentSeq++;
         }
@@ -981,7 +985,6 @@
       }
     }
 
-    // Requirement 1: Ensure ticking/checking items is immediately persisted and protected against resets
     function toggleCheck(id) {
       let vehicleData = getActiveDay();
       const item = vehicleData.items.find(d => d.id === id);
@@ -1009,6 +1012,7 @@
       document.getElementById('vouchersCountText').innerText = `${stopsCount} Stops Total (${currentVehicleLabel})`;
     }
 
+    // Suggestion 3: Include item summary breakdown in exported WhatsApp route text
     function exportWhatsApp() {
       let vehicleData = getActiveDay();
       if (vehicleData.items.length === 0) {
@@ -1025,8 +1029,9 @@
         let rKey = getRouteKey(item.customer, item.area);
         let stopNum = item.stopNo !== undefined && item.stopNo !== 999 ? item.stopNo : 999;
         if (!stops[rKey]) {
-          stops[rKey] = { stopNo: stopNum, customer: item.customer, area: item.area };
+          stops[rKey] = { stopNo: stopNum, customer: item.customer, area: item.area, items: [] };
         }
+        stops[rKey].items.push(item);
       });
 
       let sortedStops = Object.values(stops).sort((a, b) => {
@@ -1040,7 +1045,9 @@
 
       sortedStops.forEach((s, index) => {
         let srNo = s.stopNo !== 999 ? s.stopNo : (index + 1);
-        text += `${srNo}. *${s.customer}* - ${s.area}\n`;
+        let totalItemsCount = s.items.reduce((acc, curr) => acc + curr.qty, 0);
+        let primaryUnit = s.items[0]?.unit || 'Pkgs';
+        text += `${srNo}. *${s.customer}* - ${s.area} (${s.items.length} items / ${totalItemsCount} ${primaryUnit})\n`;
       });
 
       document.getElementById('whatsappTextarea').value = text;
@@ -1129,7 +1136,6 @@
           container.appendChild(div);
         });
       }
-      document.getElementById('historyModal').classList.add('hidden'); // Fix modal toggle visibility
       document.getElementById('historyModal').classList.remove('hidden');
     }
 
@@ -1203,7 +1209,6 @@
         }
       });
 
-      // Preserve existing checked status during merge/append if items already exist
       let existingCheckedMap = {};
       if (!overwrite && vehicleData.items) {
         vehicleData.items.forEach(i => {
@@ -1234,11 +1239,13 @@
         if (overwrite) {
           vehicleData.items = newItems;
         } else {
-          // Merge while avoiding duplicate entries if same items are pasted
           let existingKeys = new Set(vehicleData.items.map(i => `${i.customer}||${i.item}||${i.qty}`));
           let uniqueNewItems = newItems.filter(i => !existingKeys.has(`${i.customer}||${i.item}||${i.qty}`));
           vehicleData.items = vehicleData.items.concat(uniqueNewItems);
         }
+
+        // Suggestion 1: Auto-switch area filter to "ALL" upon new import so newly added items are immediately visible
+        currentAreaFilter = 'ALL';
 
         applyRouteSorting();
         saveHistory();
