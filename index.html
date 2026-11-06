@@ -65,6 +65,1422 @@
           <i class="fab fa-whatsapp text-sm"></i> WhatsApp
         </button>
         <button onclick="carryOverPending()" class="btn-3d bg-amber-600 border-amber-800 hover:bg-amber-500 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap" title="Carry over pending items to the next day">
+          <i class="fas fa-forward text-sm"></i> Carry Over All Pending
+        </button>
+        <button onclick="openHistoryModal()" class="btn-3d bg-blue-800 border-blue-950 hover:bg-blue-700 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap">
+          <i class="fas fa-calendar-days text-sm"></i> History
+        </button>
+        <button onclick="openImportModal()" class="btn-3d bg-indigo-600 border-indigo-800 hover:bg-indigo-500 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap">
+          <i class="fas fa-file-import text-sm"></i> Paste Data
+        </button>
+        <button onclick="loadFromCloud(true)" class="btn-3d bg-cyan-700 border-cyan-900 hover:bg-cyan-600 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap" title="Sync data from cloud">
+          <i class="fas fa-cloud-arrow-down text-sm"></i> Sync Cloud
+        </button>
+        <button onclick="resetChecks()" class="btn-3d bg-amber-700 border-amber-900 hover:bg-amber-600 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap" title="Reset check marks">
+          <i class="fas fa-rotate-left text-sm"></i> Reset Checks
+        </button>
+        <button onclick="clearCurrentDayData()" class="btn-3d bg-red-600 border-red-800 hover:bg-red-500 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap" title="Clear all items and routes for this specific date only">
+          <i class="fas fa-calendar-xmark text-sm"></i> Clear Day Data
+        </button>
+      </div>
+    </div>
+
+    <div class="bg-blue-900 px-4 py-1.5 text-xs border-t border-blue-800">
+      <div class="max-w-4xl mx-auto flex justify-between items-center mb-1">
+        <span id="progressText" class="font-medium text-blue-100">0 of 0 items loaded (0%)</span>
+        <span id="vouchersCountText" class="text-blue-200">0 Deliveries</span>
+      </div>
+      <div class="max-w-4xl mx-auto w-full bg-blue-950 rounded-full h-2 overflow-hidden">
+        <div id="progressBar" class="bg-green-400 h-2 rounded-full transition-all duration-300" style="width: 0%"></div>
+      </div>
+    </div>
+  </header>
+
+  <main class="max-w-4xl mx-auto w-full p-2 sm:p-3 flex-1 flex flex-col gap-2.5">
+    <div class="bg-white rounded-lg p-2.5 shadow-sm flex flex-col md:flex-row gap-2.5 justify-between items-center">
+      <div class="flex gap-1 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 custom-scrollbar text-xs font-semibold">
+        <button onclick="setFilter('all')" id="btn-all" class="px-3 py-1.5 rounded-lg bg-blue-600 text-white shadow-sm whitespace-nowrap">All Items</button>
+        <button onclick="setFilter('pending')" id="btn-pending" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap">Pending</button>
+        <button onclick="setFilter('loaded')" id="btn-loaded" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap">Loaded</button>
+        <button onclick="setFilter('stops')" id="btn-stops" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap">Stops List</button>
+        <button onclick="setFilter('routeEditor')" id="btn-routeEditor" class="px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap text-blue-700 font-bold"><i class="fas fa-route mr-1"></i> Manage Route & Vehicles</button>
+      </div>
+    </div>
+
+    <div id="areaPills" class="flex gap-1.5 overflow-x-auto pb-1 text-xs items-center">
+      <span class="text-slate-500 py-0.5 font-semibold flex items-center"><i class="fas fa-location-dot mr-1"></i> Area:</span>
+      <button onclick="setAreaFilter('ALL')" id="area-ALL" class="px-2.5 py-0.5 rounded-full bg-slate-800 text-white font-medium whitespace-nowrap">All Areas</button>
+    </div>
+
+    <div id="itemsContainer" class="flex flex-col gap-2.5">
+    </div>
+
+    <div id="stopsContainer" class="hidden bg-white rounded-lg shadow p-3">
+      <h2 class="text-md font-bold mb-2 text-slate-700 border-b pb-1.5">Route Sequence Summary</h2>
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse text-xs">
+          <thead>
+            <tr class="bg-slate-100 text-slate-600 uppercase font-bold border-b">
+              <th class="p-1.5">Stop #</th>
+              <th class="p-1.5">Party Name</th>
+              <th class="p-1.5">Area</th>
+              <th class="p-1.5">Total Items</th>
+              <th class="p-1.5">Status</th>
+            </tr>
+          </thead>
+          <tbody id="stopsTableBody">
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div id="routeEditorContainer" class="hidden bg-white rounded-lg shadow p-3 flex flex-col gap-4">
+      <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b pb-2 gap-2">
+        <div>
+          <h2 class="text-md font-bold text-slate-700">Vehicle-Wise Route & Stop Management</h2>
+          <p class="text-xs text-slate-500">Edit Sr No., move parties between vehicles, and click headers to sort each vehicle independently.</p>
+        </div>
+        <div class="flex items-center gap-2">
+          <button onclick="saveRouteEdits()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded shadow whitespace-nowrap"><i class="fas fa-floppy-disk mr-1"></i> Save All Routes</button>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <!-- Vehicle 1 Table Column -->
+        <div class="border rounded-lg p-2 bg-slate-50 flex flex-col gap-2">
+          <div class="flex justify-between items-center bg-blue-800 text-white px-3 py-1.5 rounded font-bold text-xs">
+            <span id="v1TableTitle">Vehicle 1</span>
+            <span class="text-[10px] bg-blue-900 px-2 py-0.5 rounded">Independent Fleet</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs bg-white rounded shadow-sm">
+              <thead>
+                <tr class="bg-slate-100 text-slate-600 uppercase font-bold border-b">
+                  <th class="p-1.5 w-16 cursor-pointer hover:bg-slate-200 transition" onclick="sortVehicleTable('V1', 'sr')">
+                    Sr No. <i id="sortIcon-V1-sr" class="fas fa-sort ml-0.5 text-slate-400"></i>
+                  </th>
+                  <th class="p-1.5 cursor-pointer hover:bg-slate-200 transition" onclick="sortVehicleTable('V1', 'party')">
+                    Party Name <i id="sortIcon-V1-party" class="fas fa-sort ml-0.5 text-slate-400"></i>
+                  </th>
+                  <th class="p-1.5 w-24 cursor-pointer hover:bg-slate-200 transition" onclick="sortVehicleTable('V1', 'area')">
+                    Area <i id="sortIcon-V1-area" class="fas fa-sort ml-0.5 text-slate-400"></i>
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="vehicle1TableBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Vehicle 2 Table Column -->
+        <div class="border rounded-lg p-2 bg-slate-50 flex flex-col gap-2">
+          <div class="flex justify-between items-center bg-indigo-800 text-white px-3 py-1.5 rounded font-bold text-xs">
+            <span id="v2TableTitle">Vehicle 2</span>
+            <span class="text-[10px] bg-indigo-900 px-2 py-0.5 rounded">Independent Fleet</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs bg-white rounded shadow-sm">
+              <thead>
+                <tr class="bg-slate-100 text-slate-600 uppercase font-bold border-b">
+                  <th class="p-1.5 w-16 cursor-pointer hover:bg-slate-200 transition" onclick="sortVehicleTable('V2', 'sr')">
+                    Sr No. <i id="sortIcon-V2-sr" class="fas fa-sort ml-0.5 text-slate-400"></i>
+                  </th>
+                  <th class="p-1.5 cursor-pointer hover:bg-slate-200 transition" onclick="sortVehicleTable('V2', 'party')">
+                    Party Name <i id="sortIcon-V2-party" class="fas fa-sort ml-0.5 text-slate-400"></i>
+                  </th>
+                  <th class="p-1.5 w-24 cursor-pointer hover:bg-slate-200 transition" onclick="sortVehicleTable('V2', 'area')">
+                    Area <i id="sortIcon-V2-area" class="fas fa-sort ml-0.5 text-slate-400"></i>
+                  </th>
+                </tr>
+              </thead>
+              <tbody id="vehicle2TableBody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <div id="addItemModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-4 flex flex-col gap-2.5">
+      <div class="flex justify-between items-center border-b pb-1.5">
+        <h3 class="font-bold text-slate-800 text-md">Add Item to Party</h3>
+        <button onclick="closeAddItemModal()" class="text-slate-400 hover:text-slate-600 text-lg"><i class="fas fa-xmark"></i></button>
+      </div>
+      <input type="hidden" id="addItemCustomer">
+      <input type="hidden" id="addItemVch">
+      <input type="hidden" id="addItemArea">
+      <div class="flex flex-col gap-1">
+        <label class="text-xs font-semibold text-slate-600">Item Name:</label>
+        <input type="text" id="newItemName" placeholder="e.g. Basmati Rice 5kg" class="p-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-semibold text-slate-600">Quantity:</label>
+          <input type="number" id="newItemQty" value="1" min="1" class="p-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-semibold text-slate-600">Unit:</label>
+          <input type="text" id="newItemUnit" value="Ctn" class="p-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+      </div>
+      <div class="flex justify-end gap-2 pt-1.5 border-t">
+        <button onclick="closeAddItemModal()" class="px-3.5 py-1 text-xs font-semibold bg-slate-200 text-slate-700 rounded hover:bg-slate-300">Cancel</button>
+        <button onclick="confirmAddItem()" class="px-3.5 py-1 text-xs font-semibold bg-blue-600 text-white rounded hover:bg-blue-700 shadow">Add Item</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="whatsappModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-lg p-4 flex flex-col gap-2.5">
+      <div class="flex justify-between items-center border-b pb-1.5">
+        <h3 class="font-bold text-slate-800 text-md"><i class="fab fa-whatsapp text-green-600 mr-1"></i> WhatsApp Route List</h3>
+        <button onclick="closeWhatsAppModal()" class="text-slate-400 hover:text-slate-600 text-lg"><i class="fas fa-xmark"></i></button>
+      </div>
+      <p class="text-xs text-slate-600">Copy the formatted route list below or click send directly to WhatsApp:</p>
+      <textarea id="whatsappTextarea" rows="8" class="w-full p-2 border border-slate-300 rounded text-xs font-mono focus:outline-none focus:ring-2 focus:ring-green-500"></textarea>
+      <div class="flex justify-end gap-2 pt-1.5 border-t">
+        <button onclick="closeWhatsAppModal()" class="px-3.5 py-1 text-xs font-semibold bg-slate-200 text-slate-700 rounded hover:bg-slate-300">Close</button>
+        <button onclick="copyWhatsAppText()" class="px-3.5 py-1 text-xs font-semibold bg-slate-700 text-white rounded hover:bg-slate-800 shadow"><i class="fas fa-copy mr-1"></i> Copy Text</button>
+        <a id="whatsappSendBtn" href="#" target="_blank" class="px-3.5 py-1 text-xs font-semibold bg-green-600 text-white rounded hover:bg-green-700 shadow flex items-center gap-1"><i class="fab fa-whatsapp"></i> Send WhatsApp</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="importModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-xl p-4 flex flex-col gap-2.5">
+      <div class="flex justify-between items-center border-b pb-1.5">
+        <h3 class="font-bold text-slate-800 text-md">Paste & Update Data</h3>
+        <button onclick="closeImportModal()" class="text-slate-400 hover:text-slate-600 text-lg"><i class="fas fa-xmark"></i></button>
+      </div>
+      <div class="grid grid-cols-2 gap-2.5">
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-semibold text-slate-600">Select Delivery Date:</label>
+          <input type="date" id="importDateInput" class="p-1.5 border border-slate-300 rounded text-xs focus:outline-none focus:ring-2 focus:ring-blue-500">
+        </div>
+        <div class="flex flex-col gap-1">
+          <label class="text-xs font-semibold text-slate-600">Target Vehicle for Imported Data:</label>
+          <select id="importVehicleSelect" class="p-1.5 border border-slate-300 rounded text-xs bg-white font-bold text-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <option value="Vehicle 1">Vehicle 1</option>
+            <option value="Vehicle 2">Vehicle 2</option>
+          </select>
+        </div>
+      </div>
+      <p class="text-xs text-slate-600">
+        Paste your copied Excel rows below. Choose whether to <b>Merge / Add to existing list</b> or <b>Overwrite</b>:
+      </p>
+      <textarea id="importTextarea" rows="6" placeholder="Paste full copied table here..." class="w-full p-2 border border-slate-300 rounded text-xs font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+      <div class="flex justify-between items-center pt-1.5 border-t">
+        <button onclick="closeImportModal()" class="px-3.5 py-1 text-xs font-semibold bg-slate-200 text-slate-700 rounded hover:bg-slate-300">Cancel</button>
+        <div class="flex gap-2">
+          <button onclick="processImportData(false)" class="px-3 py-1 text-xs font-semibold bg-amber-600 text-white rounded hover:bg-amber-700 shadow" title="Adds new items and parties to your current list">Merge / Append</button>
+          <button onclick="processImportData(true)" class="px-3 py-1 text-xs font-semibold bg-blue-600 text-white rounded hover:bg-blue-700 shadow" title="Replaces the entire list for this date">Overwrite All</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="historyModal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-4 flex flex-col gap-2.5">
+      <div class="flex justify-between items-center border-b pb-1.5">
+        <h3 class="font-bold text-slate-800 text-md"><i class="fas fa-calendar-days text-blue-600 mr-1"></i> Delivery History Archive</h3>
+        <button onclick="closeHistoryModal()" class="text-slate-400 hover:text-slate-600 text-lg"><i class="fas fa-xmark"></i></button>
+      </div>
+      <p class="text-xs text-slate-600">Select a past delivery date to check what items were sent:</p>
+      <div id="historyListContainer" class="flex flex-col gap-1.5 max-h-60 overflow-y-auto pr-1">
+      </div>
+      <div class="flex justify-end pt-1.5 border-t">
+        <button onclick="closeHistoryModal()" class="px-3.5 py-1 text-xs font-semibold bg-slate-200 text-slate-700 rounded hover:bg-slate-300">Close</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const BIN_ID = '6aea1cdaffd5d16053a339a4';
+    const MASTER_KEY = '$2a$10$ibMLtrJqDI6t5iQ.0ChHD.1csQ2bNkjh8fb7R/j9YQ5LDbrGosa5O';
+    const JSONBIN_URL = `https://api.jsonbin.io/v3/b/${BIN_ID}`;
+
+    let activeDate = new Date().toISOString().split('T')[0];
+    let activeVehicle = 'Vehicle 1';
+    let allHistoryData = {};
+    let currentFilter = 'all';
+    let currentAreaFilter = 'ALL';
+    let isHeaderVisible = true;
+    let isSyncing = false;
+
+    // Sorting states for V1 and V2 tables
+    let v1SortCol = 'sr';
+    let v1SortAsc = true;
+    let v2SortCol = 'sr';
+    let v2SortAsc = true;
+
+    function toggleHeader() {
+      isHeaderVisible = !isHeaderVisible;
+      const content = document.getElementById('collapsibleHeaderContent');
+      const icon = document.getElementById('headerToggleIcon');
+      if (isHeaderVisible) {
+        content.style.maxHeight = content.scrollHeight + "px";
+        icon.className = "fas fa-chevron-up";
+      } else {
+        content.style.maxHeight = "0px";
+        icon.className = "fas fa-chevron-down";
+      }
+    }
+
+    const defaultData = {
+      items: [
+        { id: 1, vch: "14049-26-27", customer: "Al Adil Trading Co. L.L.C DIP", area: "DIP", item: "amch new", qty: 5, unit: "Ctn", checked: false },
+        { id: 2, vch: "14049-26-27", customer: "Al Adil Trading Co. L.L.C DIP", area: "DIP", item: "chunk new", qty: 15, unit: "Ctn", checked: false },
+        { id: 3, vch: "14049-26-27", customer: "Al Adil Trading Co. L.L.C DIP", area: "DIP", item: "king new", qty: 15, unit: "Ctn", checked: false },
+        { id: 4, vch: "14050-26-27", customer: "The Leela Hotel LLC Deira", area: "Deira", item: "king new", qty: 20, unit: "Pcs", checked: false },
+        { id: 5, vch: "14050-26-27", customer: "The Leela Hotel LLC Deira", area: "Deira", item: "meat new", qty: 10, unit: "Pcs", checked: false },
+        { id: 6, vch: "14051-26-27", customer: "Erics Restaurant Karama", area: "Karama", item: "Veg Oil 20ltr", qty: 10, unit: "Jar", checked: false },
+        { id: 7, vch: "14052-26-27", customer: "Majid Spice Mill Quoz", area: "Quoz", item: "king new", qty: 1, unit: "Ctn", checked: false },
+        { id: 8, vch: "14052-26-27", customer: "Majid Spice Mill Quoz", area: "Quoz", item: "pani new", qty: 1, unit: "Ctn", checked: false }
+      ],
+      routes: {},
+      assignments: {},
+      regNumbers: { "Vehicle 1": "Vehicle 1", "Vehicle 2": "Vehicle 2" }
+    };
+
+    async function init() {
+      await loadFromCloud(false);
+
+      if (Object.keys(allHistoryData).length === 0) {
+        const savedHistory = localStorage.getItem('loadingAppHistoryV18');
+        if (savedHistory) {
+          try { allHistoryData = JSON.parse(savedHistory); } catch(e) { allHistoryData = {}; }
+        }
+      }
+
+      if (!allHistoryData[activeDate]) {
+        allHistoryData[activeDate] = { 
+          "Vehicle 1": JSON.parse(JSON.stringify(defaultData)), 
+          "Vehicle 2": { items: [], routes: {}, assignments: {} } 
+        };
+      }
+
+      document.getElementById('importDateInput').value = activeDate;
+      document.getElementById('vehicleSelect').value = activeVehicle;
+      updateVehicleRegInput();
+      updateDateDisplay();
+      applyRouteSorting();
+      renderAreaPills();
+      renderList();
+      updateProgress();
+
+      document.addEventListener('keydown', function(e) {
+        if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+          if (currentFilter === 'routeEditor') {
+            e.preventDefault();
+            saveRouteEdits();
+          }
+        }
+      });
+    }
+
+    async function saveHistory() {
+      localStorage.setItem('loadingAppHistoryV18', JSON.stringify(allHistoryData));
+      await saveToCloud();
+    }
+
+    async function saveToCloud() {
+      if (isSyncing) return;
+      isSyncing = true;
+      updateSyncStatus('Saving...', 'bg-amber-600');
+
+      try {
+        const response = await fetch(JSONBIN_URL, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Master-Key': MASTER_KEY
+          },
+          body: JSON.stringify(allHistoryData)
+        });
+
+        if (response.ok) {
+          updateSyncStatus('Synced', 'bg-green-600');
+        } else {
+          updateSyncStatus('Sync Error', 'bg-red-600');
+        }
+      } catch (err) {
+        updateSyncStatus('Offline', 'bg-slate-600');
+      } finally {
+        isSyncing = false;
+      }
+    }
+
+    async function loadFromCloud(showAlert = false) {
+      updateSyncStatus('Loading...', 'bg-amber-600');
+      try {
+        const response = await fetch(`${JSONBIN_URL}/latest`, {
+          method: 'GET',
+          headers: {
+            'X-Master-Key': MASTER_KEY
+          }
+        });
+
+        if (response.ok) {
+          const resJson = await response.json();
+          if (resJson && resJson.record) {
+            allHistoryData = resJson.record;
+            localStorage.setItem('loadingAppHistoryV18', JSON.stringify(allHistoryData));
+            updateSyncStatus('Synced', 'bg-green-600');
+            
+            if (!allHistoryData[activeDate]) {
+              allHistoryData[activeDate] = { 
+                "Vehicle 1": JSON.parse(JSON.stringify(defaultData)), 
+                "Vehicle 2": { items: [], routes: {}, assignments: {} } 
+              };
+            }
+
+            if (showAlert) {
+              alert('Cloud data synchronized successfully!');
+              applyRouteSorting();
+              renderAreaPills();
+              renderList();
+              updateProgress();
+            }
+          }
+        } else {
+          updateSyncStatus('Cloud Failed', 'bg-red-600');
+          if (showAlert) alert('Failed to pull data from cloud bin.');
+        }
+      } catch (err) {
+        updateSyncStatus('Offline', 'bg-slate-600');
+        if (showAlert) alert('Network error while connecting to cloud.');
+      }
+    }
+
+    function updateSyncStatus(text, colorClass) {
+      const badge = document.getElementById('cloudSyncStatus');
+      if (badge) {
+        badge.innerText = text;
+        badge.className = `text-[10px] px-2 py-0.5 rounded text-white font-bold ${colorClass}`;
+      }
+    }
+
+    function getActiveDay() {
+      if (!allHistoryData[activeDate]) {
+        allHistoryData[activeDate] = { 
+          "Vehicle 1": { items: [], routes: {}, assignments: {}, regNumbers: { "Vehicle 1": "Vehicle 1", "Vehicle 2": "Vehicle 2" } }, 
+          "Vehicle 2": { items: [], routes: {}, assignments: {} } 
+        };
+      }
+      if (!allHistoryData[activeDate][activeVehicle]) {
+        allHistoryData[activeDate][activeVehicle] = { items: [], routes: {}, assignments: {} };
+      }
+      if (!allHistoryData[activeDate]["Vehicle 1"].regNumbers) {
+        allHistoryData[activeDate]["Vehicle 1"].regNumbers = { "Vehicle 1": "Vehicle 1", "Vehicle 2": "Vehicle 2" };
+      }
+      return allHistoryData[activeDate][activeVehicle];
+    }
+
+    function switchVehicle() {
+      activeVehicle = document.getElementById('vehicleSelect').value;
+      currentAreaFilter = 'ALL';
+      updateVehicleRegInput();
+      applyRouteSorting();
+      renderAreaPills();
+      renderList();
+      updateProgress();
+    }
+
+    function updateVehicleRegInput() {
+      let dayData = allHistoryData[activeDate];
+      let regMap = dayData && dayData["Vehicle 1"] && dayData["Vehicle 1"].regNumbers ? dayData["Vehicle 1"].regNumbers : { "Vehicle 1": "Vehicle 1", "Vehicle 2": "Vehicle 2" };
+      let currentVal = regMap[activeVehicle] || activeVehicle;
+      document.getElementById('vehicleRegInput').value = currentVal;
+      
+      document.getElementById('v1TableTitle').innerText = regMap["Vehicle 1"] || "Vehicle 1";
+      document.getElementById('v2TableTitle').innerText = regMap["Vehicle 2"] || "Vehicle 2";
+    }
+
+    function updateVehicleRegName() {
+      let val = document.getElementById('vehicleRegInput').value.trim();
+      if (!val) val = activeVehicle;
+      
+      let dayData = allHistoryData[activeDate];
+      if (!dayData["Vehicle 1"]) dayData["Vehicle 1"] = { items: [], routes: {}, assignments: {}, regNumbers: {} };
+      if (!dayData["Vehicle 1"].regNumbers) dayData["Vehicle 1"].regNumbers = {};
+      
+      dayData["Vehicle 1"].regNumbers[activeVehicle] = val;
+      
+      let select = document.getElementById('vehicleSelect');
+      for (let opt of select.options) {
+        if (opt.value === activeVehicle) {
+          opt.text = val;
+        }
+      }
+
+      document.getElementById('v1TableTitle').innerText = dayData["Vehicle 1"].regNumbers["Vehicle 1"] || "Vehicle 1";
+      document.getElementById('v2TableTitle').innerText = dayData["Vehicle 1"].regNumbers["Vehicle 2"] || "Vehicle 2";
+      
+      saveHistory();
+      updateProgress();
+    }
+
+    function updateDateDisplay() {
+      document.getElementById('currentDateDisplay').innerText = `Date: ${activeDate}`;
+    }
+
+    function getRouteKey(customer, area) {
+      return `${customer.trim().toLowerCase()}||${area.trim().toLowerCase()}`;
+    }
+
+    function applyRouteSorting() {
+      let dayData = allHistoryData[activeDate];
+      if (!dayData) return;
+
+      let allItems = [];
+      ['Vehicle 1', 'Vehicle 2'].forEach(vName => {
+        if (dayData[vName] && dayData[vName].items) {
+          allItems = allItems.concat(dayData[vName].items);
+        }
+      });
+
+      let routes = dayData["Vehicle 1"]?.routes || {};
+      let assignments = dayData["Vehicle 1"]?.assignments || {};
+
+      allItems.forEach(item => {
+        let rKey = getRouteKey(item.customer, item.area);
+        item.stopNo = routes[rKey] !== undefined ? routes[rKey] : 999;
+        item.assignedVehicle = assignments[rKey] || item.assignedVehicle || 'Vehicle 1';
+      });
+    }
+
+    function renderAreaPills() {
+      let vehicleData = getActiveDay();
+      const areas = ['ALL', ...new Set(vehicleData.items.map(d => d.area).filter(Boolean))].sort();
+      const container = document.getElementById('areaPills');
+      container.innerHTML = `<span class="text-slate-500 py-0.5 font-semibold flex items-center"><i class="fas fa-location-dot mr-1"></i> Area:</span>`;
+      
+      areas.forEach(a => {
+        const active = a === currentAreaFilter;
+        const btn = document.createElement('button');
+        btn.onclick = () => setAreaFilter(a);
+        btn.className = `px-2.5 py-0.5 rounded-full font-medium whitespace-nowrap text-xs transition ${active ? 'bg-slate-800 text-white' : 'bg-white text-slate-600 hover:bg-slate-200 border border-slate-200'}`;
+        btn.innerText = a === 'ALL' ? 'All Areas' : a;
+        container.appendChild(btn);
+      });
+    }
+
+    function renderList() {
+      const container = document.getElementById('itemsContainer');
+      const stopsContainer = document.getElementById('stopsContainer');
+      const routeEditorContainer = document.getElementById('routeEditorContainer');
+
+      container.classList.add('hidden');
+      stopsContainer.classList.add('hidden');
+      routeEditorContainer.classList.add('hidden');
+
+      if (currentFilter === 'stops') {
+        stopsContainer.classList.remove('hidden');
+        renderStopsTable();
+        return;
+      }
+
+      if (currentFilter === 'routeEditor') {
+        routeEditorContainer.classList.remove('hidden');
+        renderRouteEditor();
+        return;
+      }
+
+      container.classList.remove('hidden');
+      container.innerHTML = '';
+
+      let vehicleData = getActiveDay();
+      let filtered = vehicleData.items.filter(item => {
+        const matchesStatus = currentFilter === 'all' ? true : currentFilter === 'loaded' ? item.checked : !item.checked;
+        const matchesArea = currentAreaFilter === 'ALL' ? true : item.area === currentAreaFilter;
+        return matchesStatus && matchesArea;
+      });
+
+      let dayData = allHistoryData[activeDate];
+      let regMap = dayData && dayData["Vehicle 1"] && dayData["Vehicle 1"].regNumbers ? dayData["Vehicle 1"].regNumbers : { "Vehicle 1": "Vehicle 1", "Vehicle 2": "Vehicle 2" };
+      let currentVehicleLabel = regMap[activeVehicle] || activeVehicle;
+
+      if (filtered.length === 0) {
+        container.innerHTML = `<div class="bg-white p-6 rounded-lg shadow text-center text-slate-400">
+          <i class="fas fa-box-open text-3xl mb-1.5"></i>
+          <p class="text-sm">No items match your filter criteria for ${currentVehicleLabel} (${activeDate}).</p>
+        </div>`;
+        return;
+      }
+
+      const groups = {};
+      const groupOrder = [];
+      filtered.forEach(item => {
+        const key = `${item.stopNo || 999}_${item.customer}_${item.area}`;
+        if (!groups[key]) {
+          groups[key] = [];
+          groupOrder.push({ key, stopNo: item.stopNo || 999, customer: item.customer, area: item.area, vch: item.vch });
+        }
+        groups[key].push(item);
+      });
+
+      groupOrder.sort((a, b) => a.stopNo - b.stopNo);
+
+      groupOrder.forEach(g => {
+        const itemsGroup = groups[g.key];
+        const custName = itemsGroup[0].customer;
+        const areaName = itemsGroup[0].area;
+        const vchNo = itemsGroup[0].vch;
+        const groupEl = document.createElement('div');
+        groupEl.className = 'bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden';
+        
+        const allChecked = itemsGroup.every(i => i.checked);
+        const stopDisplay = itemsGroup[0].stopNo !== 999 ? `Stop #${itemsGroup[0].stopNo}` : `Bill ${vchNo}`;
+        
+        groupEl.innerHTML = `
+          <div class="px-3 py-2 bg-slate-50 border-b border-slate-200 flex justify-between items-center flex-wrap gap-2">
+            <div>
+              <span class="text-[11px] font-bold text-blue-600 uppercase tracking-wide">${stopDisplay} &bull; Bill: ${vchNo}</span>
+              <h2 class="text-base sm:text-lg font-extrabold text-slate-900 leading-snug">${custName}</h2>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <span class="text-xs sm:text-sm font-bold px-3 py-1 bg-blue-100 text-blue-800 rounded-md shadow-sm border border-blue-200">
+                <i class="fas fa-location-dot mr-1"></i>${areaName}
+              </span>
+              <span class="text-[11px] font-bold px-2 py-0.5 rounded-full ${allChecked ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-800'}">
+                ${itemsGroup.filter(i=>i.checked).length}/${itemsGroup.length} Loaded
+              </span>
+              <button onclick="shiftPartyToNextDay('${custName.replace(/'/g, "\\'")}', '${areaName.replace(/'/g, "\\'")}')" class="px-2 py-1 bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold rounded shadow flex items-center gap-1" title="Shift all items of this party to tomorrow">
+                <i class="fas fa-arrow-right"></i> Shift to Next Day
+              </button>
+            </div>
+          </div>
+          <div class="divide-y divide-slate-100 px-2 sm:px-3 py-0">
+            ${itemsGroup.map((item, index) => `
+              <div class="flex items-center justify-between py-1 px-1.5 hover:bg-slate-50 transition">
+                <label class="flex items-center gap-2.5 pr-3 flex-1 cursor-pointer select-none">
+                  <input type="checkbox" ${item.checked ? 'checked' : ''} onchange="toggleCheck(${item.id})" class="checkbox-lg accent-blue-600 rounded shrink-0">
+                  <span class="text-base sm:text-lg font-bold leading-tight ${item.checked ? 'line-through text-slate-400' : 'text-slate-900'}">${index + 1}. ${item.item}</span>
+                </label>
+                <div class="flex items-center gap-2 shrink-0">
+                  <span class="text-sm sm:text-base font-extrabold px-2.5 py-0.5 ${item.checked ? 'bg-slate-100 text-slate-400' : 'bg-blue-50 text-blue-700 border border-blue-200'} rounded-md">
+                    ${item.qty} ${item.unit}
+                  </span>
+                  <button onclick="deleteItem(${item.id})" title="Remove item" class="text-slate-300 hover:text-red-500 p-1 transition"><i class="fas fa-trash-can text-sm"></i></button>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          <div class="px-3 py-1.5 bg-slate-50 border-t border-slate-100 flex justify-end">
+            <button onclick="openAddItemModal('${custName.replace(/'/g, "\\'")}', '${vchNo}', '${areaName}')" class="text-xs font-semibold text-blue-600 hover:text-blue-800 flex items-center gap-1 py-0.5 px-2">
+              <i class="fas fa-plus-circle"></i> Add Item
+            </button>
+          </div>
+        `;
+        container.appendChild(groupEl);
+      });
+    }
+
+    function renderStopsTable() {
+      const tbody = document.getElementById('stopsTableBody');
+      tbody.innerHTML = '';
+      
+      let vehicleData = getActiveDay();
+      const stops = {};
+      vehicleData.items.forEach(item => {
+        const key = `${item.customer}||${item.area}`;
+        if (!stops[key]) {
+          stops[key] = { stopNo: item.stopNo || 999, vch: item.vch, customer: item.customer, area: item.area, total: 0, checked: 0 };
+        }
+        stops[key].total++;
+        if (item.checked) stops[key].checked++;
+      });
+
+      let sortedStops = Object.values(stops).sort((a, b) => a.stopNo - b.stopNo);
+
+      sortedStops.forEach(s => {
+        const isComplete = s.checked === s.total;
+        const tr = document.createElement('tr');
+        tr.className = 'border-b hover:bg-slate-50';
+        tr.innerHTML = `
+          <td class="p-1.5 font-mono font-bold text-blue-600">${s.stopNo !== 999 ? 'Stop #' + s.stopNo : '-'}</td>
+          <td class="p-1.5 font-extrabold text-slate-900 text-sm">${s.customer}</td>
+          <td class="p-1.5 font-bold text-blue-800">${s.area}</td>
+          <td class="p-1.5 font-semibold">${s.checked} / ${s.total} items</td>
+          <td class="p-1.5">
+            <span class="px-2 py-0.5 rounded text-[11px] font-bold ${isComplete ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}">
+              ${isComplete ? 'READY' : 'PENDING'}
+            </span>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    function sortVehicleTable(vehKey, col) {
+      if (vehKey === 'V1') {
+        if (v1SortCol === col) { v1SortAsc = !v1SortAsc; } else { v1SortCol = col; v1SortAsc = true; }
+      } else {
+        if (v2SortCol === col) { v2SortAsc = !v2SortAsc; } else { v2SortCol = col; v2SortAsc = true; }
+      }
+      renderRouteEditor();
+    }
+
+    function renderRouteEditor() {
+      let dayData = allHistoryData[activeDate];
+      if (!dayData) return;
+
+      let allItems = [];
+      ['Vehicle 1', 'Vehicle 2'].forEach(vName => {
+        if (dayData[vName] && dayData[vName].items) {
+          allItems = allItems.concat(dayData[vName].items);
+        }
+      });
+
+      let routes = dayData["Vehicle 1"]?.routes || {};
+      let assignments = dayData["Vehicle 1"]?.assignments || {};
+      let regMap = dayData["Vehicle 1"]?.regNumbers || { "Vehicle 1": "Vehicle 1", "Vehicle 2": "Vehicle 2" };
+
+      let uniqueStops = {};
+      allItems.forEach(item => {
+        let rKey = getRouteKey(item.customer, item.area);
+        if (!uniqueStops[rKey]) {
+          let assignedVeh = assignments[rKey] || 'Vehicle 1';
+          uniqueStops[rKey] = {
+            key: rKey,
+            customer: item.customer,
+            area: item.area || 'General',
+            stopNo: routes[rKey] !== undefined && routes[rKey] !== 999 ? routes[rKey] : '',
+            assignedVehicle: assignedVeh
+          };
+        }
+      });
+
+      let stopList = Object.values(uniqueStops);
+
+      let v1Stops = stopList.filter(s => s.assignedVehicle === 'Vehicle 1');
+      let v2Stops = stopList.filter(s => s.assignedVehicle === 'Vehicle 2');
+
+      v1Stops.sort((a, b) => {
+        let valA, valB;
+        if (v1SortCol === 'sr') {
+          valA = a.stopNo === '' ? 99999 : parseFloat(a.stopNo);
+          valB = b.stopNo === '' ? 99999 : parseFloat(b.stopNo);
+          if (valA !== valB) return v1SortAsc ? valA - valB : valB - valA;
+          return a.customer.localeCompare(b.customer);
+        } else if (v1SortCol === 'area') {
+          valA = a.area.toLowerCase();
+          valB = b.area.toLowerCase();
+        } else {
+          valA = a.customer.toLowerCase();
+          valB = b.customer.toLowerCase();
+        }
+        if (valA !== valB) return v1SortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        return a.customer.localeCompare(b.customer);
+      });
+
+      v2Stops.sort((a, b) => {
+        let valA, valB;
+        if (v2SortCol === 'sr') {
+          valA = a.stopNo === '' ? 99999 : parseFloat(a.stopNo);
+          valB = b.stopNo === '' ? 99999 : parseFloat(b.stopNo);
+          if (valA !== valB) return v2SortAsc ? valA - valB : valB - valA;
+          return a.customer.localeCompare(b.customer);
+        } else if (v2SortCol === 'area') {
+          valA = a.area.toLowerCase();
+          valB = b.area.toLowerCase();
+        } else {
+          valA = a.customer.toLowerCase();
+          valB = b.customer.toLowerCase();
+        }
+        if (valA !== valB) return v2SortAsc ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        return a.customer.localeCompare(b.customer);
+      });
+
+      ['sr', 'party', 'area'].forEach(c => {
+        let elV1 = document.getElementById(`sortIcon-V1-${c}`);
+        if (elV1) elV1.className = v1SortCol === c ? (v1SortAsc ? 'fas fa-sort-up ml-0.5 text-blue-600' : 'fas fa-sort-down ml-0.5 text-blue-600') : 'fas fa-sort ml-0.5 text-slate-400';
+        
+        let elV2 = document.getElementById(`sortIcon-V2-${c}`);
+        if (elV2) elV2.className = v2SortCol === c ? (v2SortAsc ? 'fas fa-sort-up ml-0.5 text-indigo-600' : 'fas fa-sort-down ml-0.5 text-indigo-600') : 'fas fa-sort ml-0.5 text-slate-400';
+      });
+
+      let v1Label = regMap["Vehicle 1"] || "Vehicle 1";
+      let v2Label = regMap["Vehicle 2"] || "Vehicle 2";
+
+      let v1Body = document.getElementById('vehicle1TableBody');
+      v1Body.innerHTML = '';
+      if (v1Stops.length === 0) {
+        v1Body.innerHTML = `<tr><td colspan="3" class="p-3 text-center text-slate-400 text-xs">No stops assigned to ${v1Label}</td></tr>`;
+      } else {
+        v1Stops.forEach(s => {
+          const tr = document.createElement('tr');
+          tr.className = 'border-b hover:bg-slate-50';
+          tr.innerHTML = `
+            <td class="p-1.5">
+              <input type="number" step="any" data-routekey="${s.key}" class="route-stop-input w-16 p-1 border rounded text-xs font-mono font-bold text-center focus:ring-2 focus:ring-blue-500" value="${s.stopNo}">
+            </td>
+            <td class="p-1.5">
+              <div class="font-bold text-slate-800">${s.customer}</div>
+              <div class="mt-1">
+                <select data-vehkey="${s.key}" class="route-veh-select text-[10px] p-0.5 border rounded font-semibold bg-slate-50 text-blue-700 focus:outline-none">
+                  <option value="Vehicle 1" selected>Move to: ${v1Label}</option>
+                  <option value="Vehicle 2">Move to: ${v2Label}</option>
+                </select>
+              </div>
+            </td>
+            <td class="p-1.5 font-bold text-blue-800 text-xs">${s.area}</td>
+          `;
+          v1Body.appendChild(tr);
+        });
+      }
+
+      let v2Body = document.getElementById('vehicle2TableBody');
+      v2Body.innerHTML = '';
+      if (v2Stops.length === 0) {
+        v2Body.innerHTML = `<tr><td colspan="3" class="p-3 text-center text-slate-400 text-xs">No stops assigned to ${v2Label}</td></tr>`;
+      } else {
+        v2Stops.forEach(s => {
+          const tr = document.createElement('tr');
+          tr.className = 'border-b hover:bg-slate-50';
+          tr.innerHTML = `
+            <td class="p-1.5">
+              <input type="number" step="any" data-routekey="${s.key}" class="route-stop-input w-16 p-1 border rounded text-xs font-mono font-bold text-center focus:ring-2 focus:ring-indigo-500" value="${s.stopNo}">
+            </td>
+            <td class="p-1.5">
+              <div class="font-bold text-slate-800">${s.customer}</div>
+              <div class="mt-1">
+                <select data-vehkey="${s.key}" class="route-veh-select text-[10px] p-0.5 border rounded font-semibold bg-slate-50 text-indigo-700 focus:outline-none">
+                  <option value="Vehicle 1">Move to: ${v1Label}</option>
+                  <option value="Vehicle 2" selected>Move to: ${v2Label}</option>
+                </select>
+              </div>
+            </td>
+            <td class="p-1.5 font-bold text-indigo-800 text-xs">${s.area}</td>
+          `;
+          v2Body.appendChild(tr);
+        });
+      }
+    }
+
+    function saveRouteEdits() {
+      let dayData = allHistoryData[activeDate];
+      if (!dayData) return;
+
+      let inputs = document.querySelectorAll('.route-stop-input');
+      let vehSelects = document.querySelectorAll('.route-veh-select');
+      
+      let newRoutes = {};
+      let newAssignments = {};
+      let entriesByVeh = { "Vehicle 1": [], "Vehicle 2": [] };
+
+      vehSelects.forEach(sel => {
+        let rKey = sel.getAttribute('data-vehkey');
+        newAssignments[rKey] = sel.value;
+      });
+
+      let oldRoutes = dayData["Vehicle 1"]?.routes || {};
+
+      inputs.forEach(input => {
+        let rKey = input.getAttribute('data-routekey');
+        let assignedVeh = newAssignments[rKey] || 'Vehicle 1';
+        let valStr = input.value.trim();
+        let numVal = valStr !== '' ? parseFloat(valStr) : 99999;
+        let prevVal = oldRoutes[rKey] !== undefined ? oldRoutes[rKey] : 99999;
+        
+        entriesByVeh[assignedVeh].push({ 
+          rKey, 
+          numVal, 
+          prevVal, 
+          isExplicit: valStr !== '',
+          isNewInput: valStr !== '' && parseFloat(valStr) !== prevVal
+        });
+      });
+
+      ['Vehicle 1', 'Vehicle 2'].forEach(veh => {
+        let entries = entriesByVeh[veh];
+        
+        entries.sort((a, b) => {
+          if (a.numVal !== b.numVal) return a.numVal - b.numVal;
+          if (a.isNewInput !== b.isNewInput) return a.isNewInput ? -1 : 1;
+          return a.rKey.localeCompare(b.rKey);
+        });
+
+        let currentSeq = 1;
+
+        entries.forEach(entry => {
+          if (entry.numVal === 99999) {
+            newRoutes[entry.rKey] = 999;
+          } else {
+            newRoutes[entry.rKey] = currentSeq++;
+          }
+        });
+      });
+
+      if (!dayData["Vehicle 1"]) dayData["Vehicle 1"] = { items: [], routes: {}, assignments: {}, regNumbers: {} };
+      dayData["Vehicle 1"].routes = newRoutes;
+      dayData["Vehicle 1"].assignments = newAssignments;
+
+      let allItems = [];
+      ['Vehicle 1', 'Vehicle 2'].forEach(vName => {
+        if (dayData[vName] && dayData[vName].items) {
+          allItems = allItems.concat(dayData[vName].items);
+        }
+      });
+
+      let v1Items = [];
+      let v2Items = [];
+
+      allItems.forEach(item => {
+        let rKey = getRouteKey(item.customer, item.area);
+        item.assignedVehicle = newAssignments[rKey] || 'Vehicle 1';
+        item.stopNo = newRoutes[rKey] !== undefined ? newRoutes[rKey] : 999;
+        
+        if (item.assignedVehicle === 'Vehicle 2') {
+          v2Items.push(item);
+        } else {
+          v1Items.push(item);
+        }
+      });
+
+      dayData["Vehicle 1"].items = v1Items;
+      dayData["Vehicle 2"].items = v2Items;
+
+      applyRouteSorting();
+      saveHistory();
+      updateProgress();
+      renderRouteEditor();
+      alert("Routes saved successfully!");
+    }
+
+    function shiftPartyToNextDay(customer, area) {
+      let vehicleData = getActiveDay();
+      let targetItems = vehicleData.items.filter(i => i.customer === customer && i.area === area);
+
+      if (targetItems.length === 0) {
+        alert(`No items found for ${customer}.`);
+        return;
+      }
+
+      let currDateObj = new Date(activeDate);
+      currDateObj.setDate(currDateObj.getDate() + 1);
+      let nextDateStr = currDateObj.toISOString().split('T')[0];
+
+      let dayData = allHistoryData[activeDate];
+      let regMap = dayData && dayData["Vehicle 1"] && dayData["Vehicle 1"].regNumbers ? dayData["Vehicle 1"].regNumbers : { "Vehicle 1": "Vehicle 1", "Vehicle 2": "Vehicle 2" };
+      let currentVehicleLabel = regMap[activeVehicle] || activeVehicle;
+
+      if (!confirm(`Shift all ${targetItems.length} item(s) for party "${customer}" to next day (${nextDateStr})?`)) {
+        return;
+      }
+
+      if (!allHistoryData[nextDateStr]) {
+        allHistoryData[nextDateStr] = { 
+          "Vehicle 1": { items: [], routes: {}, assignments: {}, regNumbers: JSON.parse(JSON.stringify(regMap)) }, 
+          "Vehicle 2": { items: [], routes: {}, assignments: {} } 
+        };
+      }
+
+      let nextVehicleData = allHistoryData[nextDateStr][activeVehicle];
+      let maxId = nextVehicleData.items.reduce((max, i) => Math.max(max, i.id), 0) + 1;
+
+      let movedItems = targetItems.map(item => ({
+        id: maxId++,
+        vch: item.vch,
+        customer: item.customer,
+        area: item.area,
+        item: item.item,
+        qty: item.qty,
+        unit: item.unit,
+        checked: false,
+        assignedVehicle: activeVehicle
+      }));
+
+      nextVehicleData.items = nextVehicleData.items.concat(movedItems);
+      vehicleData.items = vehicleData.items.filter(i => !(i.customer === customer && i.area === area));
+
+      saveHistory();
+      renderAreaPills();
+      renderList();
+      updateProgress();
+      alert(`Successfully shifted "${customer}" to ${nextDateStr} (${currentVehicleLabel})!`);
+    }
+
+    function clearCurrentDayData() {
+      if (confirm(`Are you sure you want to clear all data and stops for date ${activeDate}?`)) {
+        allHistoryData[activeDate] = {
+          "Vehicle 1": { items: [], routes: {}, assignments: {}, regNumbers: { "Vehicle 1": "Vehicle 1", "Vehicle 2": "Vehicle 2" } },
+          "Vehicle 2": { items: [], routes: {}, assignments: {} }
+        };
+        saveHistory();
+        renderAreaPills();
+        renderList();
+        updateProgress();
+        alert(`Successfully cleared all data for ${activeDate}!`);
+      }
+    }
+
+    function carryOverPending() {
+      let vehicleData = getActiveDay();
+      let pendingItems = vehicleData.items.filter(i => !i.checked);
+
+      let dayData = allHistoryData[activeDate];
+      let regMap = dayData && dayData["Vehicle 1"] && dayData["Vehicle 1"].regNumbers ? dayData["Vehicle 1"].regNumbers : { "Vehicle 1": "Vehicle 1", "Vehicle 2": "Vehicle 2" };
+      let currentVehicleLabel = regMap[activeVehicle] || activeVehicle;
+
+      if (pendingItems.length === 0) {
+        alert('No pending items to carry over for ' + currentVehicleLabel + ' on ' + activeDate + '.');
+        return;
+      }
+
+      let currDateObj = new Date(activeDate);
+      currDateObj.setDate(currDateObj.getDate() + 1);
+      let nextDateStr = currDateObj.toISOString().split('T')[0];
+
+      if (!confirm(`Carry over ${pendingItems.length} pending item(s) to next day (${nextDateStr}) for ${currentVehicleLabel}?`)) {
+        return;
+      }
+
+      if (!allHistoryData[nextDateStr]) {
+        allHistoryData[nextDateStr] = { 
+          "Vehicle 1": { items: [], routes: {}, assignments: {}, regNumbers: JSON.parse(JSON.stringify(regMap)) }, 
+          "Vehicle 2": { items: [], routes: {}, assignments: {} } 
+        };
+      }
+
+      let nextVehicleData = allHistoryData[nextDateStr][activeVehicle];
+      let maxId = nextVehicleData.items.reduce((max, i) => Math.max(max, i.id), 0) + 1;
+
+      let carriedItems = pendingItems.map(item => {
+        return {
+          id: maxId++,
+          vch: item.vch,
+          customer: item.customer,
+          area: item.area,
+          item: item.item,
+          qty: item.qty,
+          unit: item.unit,
+          checked: false,
+          assignedVehicle: activeVehicle
+        };
+      });
+
+      nextVehicleData.items = nextVehicleData.items.concat(carriedItems);
+      
+      saveHistory();
+      alert(`Successfully carried over ${carriedItems.length} pending items to ${nextDateStr} (${currentVehicleLabel})! Switching to ${nextDateStr}.`);
+      switchDate(nextDateStr);
+    }
+
+    function openAddItemModal(customer, vch, area) {
+      document.getElementById('addItemCustomer').value = customer;
+      document.getElementById('addItemVch').value = vch;
+      document.getElementById('addItemArea').value = area;
+      document.getElementById('newItemName').value = '';
+      document.getElementById('newItemQty').value = 1;
+      document.getElementById('newItemUnit').value = 'Ctn';
+      document.getElementById('addItemModal').classList.remove('hidden');
+    }
+
+    function closeAddItemModal() {
+      document.getElementById('addItemModal').classList.add('hidden');
+    }
+
+    function confirmAddItem() {
+      const customer = document.getElementById('addItemCustomer').value;
+      const vch = document.getElementById('addItemVch').value;
+      const area = document.getElementById('addItemArea').value;
+      const itemName = document.getElementById('newItemName').value.trim();
+      const qty = parseFloat(document.getElementById('newItemQty').value) || 1;
+      const unit = document.getElementById('newItemUnit').value.trim() || 'Ctn';
+
+      if (!itemName) {
+        alert('Please enter an item name.');
+        return;
+      }
+
+      let vehicleData = getActiveDay();
+      let maxId = vehicleData.items.reduce((max, i) => Math.max(max, i.id), 0);
+
+      vehicleData.items.push({
+        id: maxId + 1,
+        vch: vch,
+        customer: customer,
+        area: area,
+        item: itemName,
+        qty: qty,
+        unit: unit,
+        checked: false,
+        assignedVehicle: activeVehicle
+      });
+
+      applyRouteSorting();
+      saveHistory();
+      renderAreaPills();
+      renderList();
+      updateProgress();
+      closeAddItemModal();
+      alert(`Added "${itemName}" to ${customer}!`);
+    }
+
+    function deleteItem(id) {
+      if (confirm('Are you sure you want to remove this item?')) {
+        let vehicleData = getActiveDay();
+        vehicleData.items = vehicleData.items.filter(i => i.id !== id);
+        saveHistory();
+        renderList();
+        updateProgress();
+      }
+    }
+
+    function toggleCheck(id) {
+      let vehicleData = getActiveDay();
+      const item = vehicleData.items.find(d => d.id === id);
+      if (item) {
+        item.checked = !item.checked;
+        saveHistory();
+        updateProgress();
+      }
+    }
+
+    function updateProgress() {
+      let vehicleData = getActiveDay();
+      const total = vehicleData.items.length;
+      const loaded = vehicleData.items.filter(d => d.checked).length;
+      const pct = total === 0 ? 0 : Math.round((loaded / total) * 100);
+
+      document.getElementById('progressText').innerText = `${loaded} of ${total} items loaded (${pct}%)`;
+      document.getElementById('progressBar').style.width = `${pct}%`;
+      
+      let dayData = allHistoryData[activeDate];
+      let regMap = dayData && dayData["Vehicle 1"] && dayData["Vehicle 1"].regNumbers ? dayData["Vehicle 1"].regNumbers : { "Vehicle 1": "Vehicle 1", "Vehicle 2": "Vehicle 2" };
+      let currentVehicleLabel = regMap[activeVehicle] || activeVehicle;
+
+      const stopsCount = new Set(vehicleData.items.map(d => `${d.customer}||${d.area}`)).size;
+      document.getElementById('vouchersCountText').innerText = `${stopsCount} Stops Total (${currentVehicleLabel})`;
+    }
+
+    function exportWhatsApp() {
+      let vehicleData = getActiveDay();
+      if (vehicleData.items.length === 0) {
+        alert('No stops to export.');
+        return;
+      }
+
+      let dayData = allHistoryData[activeDate];
+      let regMap = dayData && dayData["Vehicle 1"] && dayData["Vehicle 1"].regNumbers ? dayData["Vehicle 1"].regNumbers : { "Vehicle 1": "Vehicle 1", "Vehicle 2": "Vehicle 2" };
+      let currentVehicleLabel = regMap[activeVehicle] || activeVehicle;
+
+      const stops = {};
+      vehicleData.items.forEach(item => {
+        let rKey = getRouteKey(item.customer, item.area);
+        let stopNum = item.stopNo !== undefined && item.stopNo !== 999 ? item.stopNo : 999;
+        if (!stops[rKey]) {
+          stops[rKey] = { stopNo: stopNum, customer: item.customer, area: item.area, items: [] };
+        }
+        stops[rKey].items.push(item);
+      });
+
+      let sortedStops = Object.values(stops).sort((a, b) => {
+        let sA = a.stopNo === 999 ? 99999 : a.stopNo;
+        let sB = b.stopNo === 999 ? 99999 : b.stopNo;
+        if (sA !== sB) return sA - sB;
+        return a.customer.localeCompare(b.customer);
+      });
+
+      let text = `🚚 *ROUTE SEQUENCE - ${currentVehicleLabel.toUpperCase()}* 🚚\n📅 Date: ${activeDate}\n\n`;
+
+      sortedStops.forEach((s, index) => {
+        let srNo = s.stopNo !== 999 ? s.stopNo : (index + 1);
+        let totalItemsCount = s.items.reduce((acc, curr) => acc + curr.qty, 0);
+        let primaryUnit = s.items[0]?.unit || 'Pkgs';
+        text += `${srNo}. *${s.customer}* - ${s.area} (${s.items.length} items / ${totalItemsCount} ${primaryUnit})\n`;
+      });
+
+      document.getElementById('whatsappTextarea').value = text;
+      let encoded = encodeURIComponent(text);
+      document.getElementById('whatsappSendBtn').href = `https://api.whatsapp.com/send?text=${encoded}`;
+      document.getElementById('whatsappModal').classList.remove('hidden');
+    }
+
+    function closeWhatsAppModal() {
+      document.getElementById('whatsappModal').classList.add('hidden');
+    }
+
+    function copyWhatsAppText() {
+      let textarea = document.getElementById('whatsappTextarea');
+      textarea.select();
+      textarea.setSelectionRange(0, 99999);
+      navigator.clipboard.writeText(textarea.value);
+      alert('Route list copied to clipboard!');
+    }
+
+    function setFilter(type) {
+      currentFilter = type;
+      ['all', 'pending', 'loaded', 'stops', 'routeEditor'].forEach(t => {
+        const btn = document.getElementById(`btn-${t}`);
+        if (btn) {
+          if (t === type) {
+            btn.className = "px-3 py-1.5 rounded-lg bg-blue-600 text-white shadow-sm whitespace-nowrap font-bold";
+          } else {
+            btn.className = "px-3 py-1.5 rounded-lg bg-slate-100 text-slate-600 hover:bg-slate-200 whitespace-nowrap";
+          }
+        }
+      });
+      renderList();
+    }
+
+    function setAreaFilter(area) {
+      currentAreaFilter = area;
+      renderAreaPills();
+      renderList();
+    }
+
+    function resetChecks() {
+      let dayData = allHistoryData[activeDate];
+      let regMap = dayData && dayData["Vehicle 1"] && dayData["Vehicle 1"].regNumbers ? dayData["Vehicle 1"].regNumbers : { "Vehicle 1": "Vehicle 1", "Vehicle 2": "Vehicle 2" };
+      let currentVehicleLabel = regMap[activeVehicle] || activeVehicle;
+
+      if (confirm(`Are you sure you want to reset all checked items for ${currentVehicleLabel} on ${activeDate}?`)) {
+        let vehicleData = getActiveDay();
+        vehicleData.items.forEach(d => d.checked = false);
+        saveHistory();
+        renderList();
+        updateProgress();
+      }
+    }
+
+    function openImportModal() {
+      document.getElementById('importModal').classList.remove('hidden');
+    }
+
+    function closeImportModal() {
+      document.getElementById('importModal').classList.add('hidden');
+    }
+
+    function openHistoryModal() {
+      const container = document.getElementById('historyListContainer');
+      container.innerHTML = '';
+      
+      const dates = Object.keys(allHistoryData).sort().reverse();
+      if (dates.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-400 text-center py-4">No past delivery dates recorded yet.</p>`;
+      } else {
+        dates.forEach(d => {
+          let v1Count = allHistoryData[d]["Vehicle 1"]?.items?.length || 0;
+          let v2Count = allHistoryData[d]["Vehicle 2"]?.items?.length || 0;
+          const isCurrent = d === activeDate;
+          
+          const div = document.createElement('div');
+          div.className = `p-2.5 rounded-lg border flex justify-between items-center cursor-pointer transition ${isCurrent ? 'bg-blue-50 border-blue-300 font-bold' : 'bg-slate-50 hover:bg-slate-100 border-slate-200'}`;
+          div.innerHTML = `
+            <div>
+              <div class="text-sm text-slate-800"><i class="fas fa-calendar mr-1.5 text-blue-600"></i> ${d} ${isCurrent ? '(Active)' : ''}</div>
+              <div class="text-[11px] text-slate-500 font-normal mt-0.5">V1: ${v1Count} items &bull; V2: ${v2Count} items</div>
+            </div>
+            <button onclick="switchDate('${d}')" class="px-2.5 py-1 bg-blue-600 text-white text-xs rounded shadow hover:bg-blue-700">View</button>
+          `;
+          container.appendChild(div);
+        });
+      }
+      document.getElementById('historyModal').classList.remove('hidden');
+    }
+
+    function closeHistoryModal() {
+      document.getElementById('historyModal').classList.add('hidden');
+    }
+
+    function switchDate(dateStr) {
+      activeDate = dateStr;
+      document.getElementById('importDateInput').value = activeDate;
+      updateVehicleRegInput();
+      updateDateDisplay();
+      applyRouteSorting();
+      renderAreaPills();
+      renderList();
+      updateProgress();
+      closeHistoryModal();
+    }
+
+    function processImportData(overwrite) {
+      const dateVal = document.getElementById('importDateInput').value;
+      const targetVeh = document.getElementById('importVehicleSelect').value;
+      const text = document.getElementById('importTextarea').value.trim();
+      
+      if (!dateVal) {
+        alert('Please select a delivery date.');
+        return;
+      }
+      if (!text) {
+        alert('Please paste your sheet data.');
+        return;
+      }
+
+      activeDate = dateVal;
+      const lines = text.split('\n');
+      let rawItems = [];
+
+      lines.forEach(line => {
+        const cols = line.split('\t').map(c => c.trim());
+        if (cols.length >= 6 && cols[3] && cols[0].toLowerCase() !== 'vch/bill no' && cols[0].toLowerCase() !== 'vch') {
+          rawItems.push({
+            vch: cols[0],
+            customer: cols[1],
+            area: cols[2],
+            item: cols[3],
+            qty: parseFloat(cols[4]) || 1,
+            unit: cols[5] || 'Ctn'
+          });
+        }
+      });
+
+      let lastVch = '', lastCust = '', lastArea = '';
+      rawItems.forEach(item => {
+        if (item.vch) lastVch = item.vch; else item.vch = lastVch;
+        if (item.customer) lastCust = item.customer; else item.customer = lastCust;
+        if (item.area) lastArea = item.area; else item.area = lastArea;
+      });
+
+      if (!allHistoryData[activeDate]) {
+        allHistoryData[activeDate] = { 
+          "Vehicle 1": { items: [], routes: {}, assignments: {}, regNumbers: { "Vehicle 1": "Vehicle 1", "Vehicle 2": "Vehicle 2" } }, 
+          "Vehicle 2": { items: [], routes: {}, assignments: {} } 
+        };
+      }
+
+      let vehicleData = allHistoryData[activeDate][targetVeh];
+      let idCounter = 1;
+      ['Vehicle 1', 'Vehicle 2'].forEach(v => {
+        if (allHistoryData[activeDate][v]?.items) {
+          allHistoryData[activeDate][v].items.forEach(i => { if (i.id >= idCounter) idCounter = i.id + 1; });
+        }
+      });
+
+      let existingCheckedMap = {};
+      if (!overwrite && vehicleData.items) {
+        vehicleData.items.forEach(i => {
+          existingCheckedMap[`${i.customer}||${i.item}`] = i.checked;
+        });
+      }
+
+      let newItems = rawItems.map(item => {
+        let rKey = getRouteKey(item.customer, item.area);
+        if (allHistoryData[activeDate]["Vehicle 1"] && !allHistoryData[activeDate]["Vehicle 1"].assignments[rKey]) {
+          allHistoryData[activeDate]["Vehicle 1"].assignments[rKey] = targetVeh;
+        }
+        let wasChecked = existingCheckedMap[`${item.customer}||${item.item}`] || false;
+        return {
+          id: idCounter++,
+          vch: item.vch,
+          customer: item.customer,
+          area: item.area,
+          item: item.item,
+          qty: item.qty,
+          unit: item.unit,
+          checked: wasChecked,
+          assignedVehicle: targetVeh
+        };
+      });
+
+      if (newItems.length > 0) {
+        if (overwrite) {
+          vehicleData.items = newItems;
+        } else {
+          let existingKeys = new Set(vehicleData.items.map(i => `${i.customer}||${i.item}||${i.qty}`));
+          let uniqueNewItems = newItems.filter(i => !existingKeys.has(`${i.customer}||${i.item}||${i.qty}`));
+          vehicleData.items = vehicleData.items.concat(uniqueNewItems);
+        }
+
+        currentAreaFilter = 'ALL';
+
+        applyRouteSorting();
+        saveHistory();
+        updateDateDisplay();
+        renderAreaPills();
+        renderList();
+        updateProgress();
+        closeImportModal();
+        let dayData = allHistoryData[activeDate];
+        let regMap = dayData && dayData["Vehicle 1"] && dayData["Vehicle 1"].regNumbers ? dayData["Vehicle 1"].regNumbers : { "Vehicle 1": "Vehicle 1", "Vehicle 2": "Vehicle 2" };
+        let targetLabel = regMap[targetVeh] || targetVeh;
+        alert(`Successfully ${overwrite ? 'overwritten' : 'merged'} items into ${targetLabel} for date ${activeDate}!`);
+      } else {
+        alert('Could not parse table. Make sure you copy the table columns from Excel.');
+      }
+    }
+
+    window.onload = function() {
+      init();
+      const content = document.getElementById('collapsibleHeaderContent');
+      content.style.maxHeight = content.scrollHeight + "px";
+    };
+  </script>
+</body>
+</html><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vehicle Loading Checklist & Route Manager</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+  <style>
+    .checkbox-lg {
+      width: 24px;
+      height: 24px;
+      cursor: pointer;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background-color: #cbd5e1;
+      border-radius: 3px;
+    }
+    .btn-3d {
+      transition: all 0.1s ease;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2), 0 2px 4px -1px rgba(0, 0, 0, 0.1);
+      border-bottom-width: 4px;
+    }
+    .btn-3d:active {
+      transform: translateY(2px);
+      border-bottom-width: 2px;
+      box-shadow: 0 2px 3px -1px rgba(0, 0, 0, 0.2);
+    }
+  </style>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800 flex flex-col font-sans">
+
+  <header class="bg-blue-700 text-white shadow-md sticky top-0 z-30 select-none">
+    <div onclick="toggleHeader()" class="cursor-pointer bg-blue-800 px-4 py-1 text-center text-[11px] font-medium text-blue-200 hover:bg-blue-900 transition flex items-center justify-center gap-1">
+      <i id="headerToggleIcon" class="fas fa-chevron-up"></i> Tap here to show/hide control header
+    </div>
+
+    <div id="collapsibleHeaderContent" class="transition-all duration-300 overflow-hidden">
+      <div class="max-w-4xl mx-auto px-4 py-1.5 flex flex-col sm:flex-row justify-between items-center gap-2 border-b border-blue-600/50">
+        <div class="flex items-center gap-2">
+          <p id="currentDateDisplay" class="text-sm font-bold text-white">Date: Loading...</p>
+          <span id="cloudSyncStatus" class="text-[10px] bg-blue-900 px-2 py-0.5 rounded text-blue-200 border border-blue-500">Cloud Ready</span>
+        </div>
+        
+        <div class="flex items-center gap-2 bg-blue-900 border-2 border-blue-400 rounded-lg px-3 py-1 shadow-inner w-full sm:w-auto justify-between">
+          <div class="flex items-center gap-2">
+            <i class="fas fa-truck text-blue-200 text-sm"></i>
+            <span class="text-xs text-blue-200 font-semibold">Active Fleet:</span>
+          </div>
+          <div class="flex items-center gap-1">
+            <select id="vehicleSelect" onchange="switchVehicle()" class="bg-blue-950 text-white text-xs font-bold px-2 py-1 rounded focus:outline-none cursor-pointer">
+              <option value="Vehicle 1">Vehicle 1</option>
+              <option value="Vehicle 2">Vehicle 2</option>
+            </select>
+            <input type="text" id="vehicleRegInput" onchange="updateVehicleRegName()" placeholder="Enter Reg #" class="bg-blue-950 text-white text-xs font-bold px-2 py-1 rounded w-28 focus:outline-none focus:ring-1 focus:ring-blue-300 placeholder:text-blue-400" title="Type custom registration number">
+          </div>
+        </div>
+      </div>
+
+      <div class="max-w-4xl mx-auto px-4 py-2 flex items-center justify-between gap-2 overflow-x-auto custom-scrollbar">
+        <button onclick="exportWhatsApp()" class="btn-3d bg-green-600 border-green-800 hover:bg-green-500 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap">
+          <i class="fab fa-whatsapp text-sm"></i> WhatsApp
+        </button>
+        <button onclick="carryOverPending()" class="btn-3d bg-amber-600 border-amber-800 hover:bg-amber-500 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap" title="Carry over pending items to the next day">
           <i class="fas fa-forward text-sm"></i> Carry Over
         </button>
         <button onclick="openHistoryModal()" class="btn-3d bg-blue-800 border-blue-950 hover:bg-blue-700 text-white text-xs font-bold px-3 py-2 rounded-lg flex items-center gap-1.5 whitespace-nowrap">
